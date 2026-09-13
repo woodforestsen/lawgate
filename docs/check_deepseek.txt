@@ -1,0 +1,60 @@
+==========================================================================
+CA-LegalGate · DeepSeek API 后端自检（D30）
+==========================================================================
+
+[离线段] 假 DeepSeek 服务已起于 http://127.0.0.1:60992（行为可在 ok/degenerate/auth/flaky 间切换）
+  离线段使用独立缓存 docs\_check_deepseek_cache.db（不动 data/kb/gen_cache.db）
+
+== 0. 配置解析（决定最终回答模型到底是谁）==
+  llm_backend=deepseek　服务形态=deepseek
+  API 模型=deepseek-v4-flash　地址=https://api.deepseek.com　Key=已读到　思考模式=关
+  门控草稿来源=auto　草稿模型=Qwen/Qwen2.5-0.5B-Instruct（HF 缓存快照兜底）
+  [PASS] 服务形态与 base.yaml 一致　provider=deepseek
+  [PASS] 走 API 时模型名已配置　deepseek-v4-flash
+  [PASS] 走 API 时有密钥　没有则会 401（离线段用假服务，不受影响）
+  [PASS] 默认关闭思考模式（否则 max_tokens 会被 reasoning 吃光）
+
+== 1. 整段生成（请求体口径 + 答案解析）==
+  [PASS] 返回正文非空　'合同无效的情形包括欺诈、胁迫以及违反法律强制性规定。'
+  [PASS] 中文未乱码　合同无效的情形包括欺诈、胁迫以及违反法律
+  [PASS] temperature=0（与本地贪心口径一致）　0
+  [PASS] 关思考时发 thinking.type=disabled　{"type": "disabled"}
+  [PASS] max_tokens 透传　64
+  一次调用 0.01s　用量=18 token
+
+== 2. 流式输出 ==
+  [PASS] 流式产出多片（真流式，不是一次性吐完）　5 片
+  [PASS] 中文未乱码（SSE 头不带 charset 的坑）　'合同无效的情形包括欺诈、胁迫以及违反法律'
+  [PASS] 首片远早于末片（逐片到达，非缓冲后一次交付）　首片 0.25s / 总 0.61s
+  [PASS] 流式请求确实是 stream=true
+
+== 6. 缓存（同题不重复花钱）==
+  [PASS] 第二次同题不再发请求（命中内容缓存）　请求数 2→2
+  [PASS] 缓存返回的文本与首次一致
+
+== 3. 草稿 logprobs（门控信号的原料）==
+  [PASS] 草稿用思考模式 + logprobs（只有这样才能拿到真实分布）　{"thinking": {"type": "enabled"}, "logprobs": true, "top_logprobs": 3}
+  [PASS] 解析出多个位置　n=5
+  [PASS] 每个位置的候选按 logprob 降序（signal 依赖这个前提）
+  [PASS] 来源标记为 api　api
+  [PASS] margin 不确定性落在 [0,1]　0.1496
+  [PASS] entropy 落在 [0,1]　0.4114
+  草稿文本='第0第1第2第3第4'　u(margin)=0.1496　raw_margin=1.900
+
+== 4. 退化分布必须被识破，并且自动换源 ==
+  [PASS] 退化分布抛 DegenerateLogprobs（而不是算出个 9999 的假信号）　DegenerateLogprobs: DeepSeek 返回的 logprobs 是退化分布（被选中 token 的 logprob 全为 0.0），拿它算 
+  [PASS] 来源链自动换到 local　local
+  [PASS] 换源过程被完整记录（api 失败原因 + local 成功）　[{"source": "api", "ok": false, "seconds": 0.005, "error": "DegenerateLogprobs: DeepSeek 返回的 logprobs 是退化分布（被选中 token 的 logprob 全为 0.0），拿它算 margin/entropy 会得到无意义的信号值", "note": "假服务，返回退化分布"}, {"source"
+  [PASS] 换源后没有换出假信号：被选中 logprob 不全是 0
+
+== 5. 报错与重试 ==
+  [PASS] 401 → DeepSeekAuthError　DeepSeekAuthError
+  [PASS] 报错是人话（指出该去改 .env 的哪一项）　DeepSeek API 鉴权失败（HTTP 401）：{"error": {"message": "Authentication Fails (governo
+  [PASS] 429 会重试并最终成功　重试 2 次，请求数 +3
+  [PASS] 重试次数与连续 429 次数相符　+3
+
+（未加 --live：跳过真机段。真机验证请加 --live）
+
+==========================================================================
+结果：全部通过
+==========================================================================

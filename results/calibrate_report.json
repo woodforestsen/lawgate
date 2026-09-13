@@ -1,0 +1,286 @@
+{
+  "date": "2026-09-12",
+  "provenance": {
+    "hardware": "CPU AMD64 / 18 cores / no CUDA",
+    "device": "cpu",
+    "llm_provider": "deepseek",
+    "llm_api_base": "https://api.deepseek.com",
+    "llm_api_model": "deepseek-v4-flash",
+    "llm_thinking": false,
+    "has_api_key": true,
+    "draft_source": "auto",
+    "draft_model": "Qwen/Qwen2.5-0.5B-Instruct",
+    "draft_model_path": "E:/ModelCache/huggingface/hub/models--Qwen--Qwen2.5-0.5B-Instruct/snapshots\\7ae557604adf67be50417f59c2c2f167def9a775",
+    "draft_model_source": "HF 缓存快照兜底",
+    "causal_model": "deepseek-v4-flash",
+    "causal_model_path": "models/fuzi-mingcha-v1_0",
+    "causal_model_dtype": "float16",
+    "causal_model_source": "DeepSeek API（https://api.deepseek.com，模型 deepseek-v4-flash）",
+    "embed_model": "bge-small-zh-v1.5",
+    "llm_backend": "deepseek",
+    "date": "2026-09-12",
+    "version": "0.1.0",
+    "written_at": "2026-09-12T23:02:53"
+  },
+  "split": "dev_calib",
+  "dev_items": 144,
+  "always_rag_acc_on_dev": 0.4792,
+  "never_rag_acc_on_dev": 0.4583,
+  "target": 0.4742,
+  "rule": "largest_feasible",
+  "signal": "margin",
+  "grid_max": 1.0,
+  "modes": {
+    "hybrid": {
+      "meta": {
+        "n_items": 144,
+        "n_preds": 144,
+        "n_skipped": 0,
+        "skipped_examples": []
+      },
+      "taus": {
+        "b1": 0.29,
+        "b2": 1.0,
+        "b3": 1.0,
+        "b4": 1.0
+      },
+      "per_bucket": {
+        "b1": {
+          "n": 36,
+          "tau": 0.29,
+          "feasible": false,
+          "rule": "largest_feasible",
+          "target": 0.4742,
+          "acc_at_tau": 0.25,
+          "rr_at_tau": 0.9722,
+          "acc_if_always_retrieve": 0.25,
+          "acc_if_never_retrieve": 0.1944,
+          "tau_min_feasible": null,
+          "tau_max_feasible": null
+        },
+        "b2": {
+          "n": 44,
+          "tau": 1.0,
+          "feasible": true,
+          "rule": "largest_feasible",
+          "target": 0.4742,
+          "acc_at_tau": 0.5682,
+          "rr_at_tau": 0.0,
+          "acc_if_always_retrieve": 0.6818,
+          "acc_if_never_retrieve": 0.5682,
+          "tau_min_feasible": 0.01,
+          "tau_max_feasible": 1.0
+        },
+        "b3": {
+          "n": 16,
+          "tau": 1.0,
+          "feasible": true,
+          "rule": "largest_feasible",
+          "target": 0.4742,
+          "acc_at_tau": 0.5,
+          "rr_at_tau": 0.0,
+          "acc_if_always_retrieve": 0.6875,
+          "acc_if_never_retrieve": 0.5,
+          "tau_min_feasible": 0.01,
+          "tau_max_feasible": 1.0
+        },
+        "b4": {
+          "n": 48,
+          "tau": 1.0,
+          "feasible": true,
+          "rule": "largest_feasible",
+          "target": 0.4742,
+          "acc_at_tau": 0.5417,
+          "rr_at_tau": 0.0,
+          "acc_if_always_retrieve": 0.3958,
+          "acc_if_never_retrieve": 0.5417,
+          "tau_min_feasible": 0.5,
+          "tau_max_feasible": 1.0
+        }
+      },
+      "dev_acc_at_taus": 0.4722,
+      "dev_rr_at_taus": 0.2431
+    },
+    "complexity": {
+      "meta": {
+        "n_items": 144,
+        "n_preds": 144,
+        "n_skipped": 0,
+        "skipped_examples": []
+      },
+      "taus": {
+        "b1": 0.29,
+        "b2": 1.0,
+        "b3": 1.0,
+        "b4": 1.0
+      },
+      "per_bucket": {
+        "b1": {
+          "n": 36,
+          "tau": 0.29,
+          "feasible": false,
+          "rule": "largest_feasible",
+          "target": 0.4742,
+          "acc_at_tau": 0.25,
+          "rr_at_tau": 0.9722,
+          "acc_if_always_retrieve": 0.25,
+          "acc_if_never_retrieve": 0.1944,
+          "tau_min_feasible": null,
+          "tau_max_feasible": null
+        },
+        "b2": {
+          "n": 44,
+          "tau": 1.0,
+          "feasible": true,
+          "rule": "largest_feasible",
+          "target": 0.4742,
+          "acc_at_tau": 0.5682,
+          "rr_at_tau": 0.0,
+          "acc_if_always_retrieve": 0.6818,
+          "acc_if_never_retrieve": 0.5682,
+          "tau_min_feasible": 0.01,
+          "tau_max_feasible": 1.0
+        },
+        "b3": {
+          "n": 16,
+          "tau": 1.0,
+          "feasible": true,
+          "rule": "largest_feasible",
+          "target": 0.4742,
+          "acc_at_tau": 0.5,
+          "rr_at_tau": 0.0,
+          "acc_if_always_retrieve": 0.6875,
+          "acc_if_never_retrieve": 0.5,
+          "tau_min_feasible": 0.01,
+          "tau_max_feasible": 1.0
+        },
+        "b4": {
+          "n": 48,
+          "tau": 1.0,
+          "feasible": true,
+          "rule": "largest_feasible",
+          "target": 0.4742,
+          "acc_at_tau": 0.5417,
+          "rr_at_tau": 0.0,
+          "acc_if_always_retrieve": 0.3958,
+          "acc_if_never_retrieve": 0.5417,
+          "tau_min_feasible": 0.5,
+          "tau_max_feasible": 1.0
+        }
+      },
+      "dev_acc_at_taus": 0.4722,
+      "dev_rr_at_taus": 0.2431
+    },
+    "signal": {
+      "meta": {
+        "n_items": 144,
+        "n_preds": 144,
+        "n_skipped": 0,
+        "skipped_examples": []
+      },
+      "taus": {
+        "b1": 0.03,
+        "b2": 1.0,
+        "b3": 1.0,
+        "b4": 1.0
+      },
+      "per_bucket": {
+        "b1": {
+          "n": 36,
+          "tau": 0.03,
+          "feasible": false,
+          "rule": "largest_feasible",
+          "target": 0.4742,
+          "acc_at_tau": 0.2778,
+          "rr_at_tau": 0.8611,
+          "acc_if_always_retrieve": 0.25,
+          "acc_if_never_retrieve": 0.1944,
+          "tau_min_feasible": null,
+          "tau_max_feasible": null
+        },
+        "b2": {
+          "n": 44,
+          "tau": 1.0,
+          "feasible": true,
+          "rule": "largest_feasible",
+          "target": 0.4742,
+          "acc_at_tau": 0.5682,
+          "rr_at_tau": 0.0,
+          "acc_if_always_retrieve": 0.6818,
+          "acc_if_never_retrieve": 0.5682,
+          "tau_min_feasible": 0.01,
+          "tau_max_feasible": 1.0
+        },
+        "b3": {
+          "n": 16,
+          "tau": 1.0,
+          "feasible": true,
+          "rule": "largest_feasible",
+          "target": 0.4742,
+          "acc_at_tau": 0.5,
+          "rr_at_tau": 0.0,
+          "acc_if_always_retrieve": 0.6875,
+          "acc_if_never_retrieve": 0.5,
+          "tau_min_feasible": 0.01,
+          "tau_max_feasible": 1.0
+        },
+        "b4": {
+          "n": 48,
+          "tau": 1.0,
+          "feasible": true,
+          "rule": "largest_feasible",
+          "target": 0.4742,
+          "acc_at_tau": 0.5417,
+          "rr_at_tau": 0.0,
+          "acc_if_always_retrieve": 0.3958,
+          "acc_if_never_retrieve": 0.5417,
+          "tau_min_feasible": 0.1,
+          "tau_max_feasible": 1.0
+        }
+      },
+      "dev_acc_at_taus": 0.4792,
+      "dev_rr_at_taus": 0.2153
+    }
+  },
+  "single_tau": {
+    "hybrid": {
+      "tau": 0.99,
+      "report": {
+        "n": 144,
+        "tau": 0.99,
+        "feasible": true,
+        "target": 0.4742,
+        "acc_at_tau": 0.4792,
+        "rr_at_tau": 0.1111
+      },
+      "dev_acc": 0.4792,
+      "dev_rr": 0.1111
+    },
+    "complexity": {
+      "tau": 0.99,
+      "report": {
+        "n": 144,
+        "tau": 0.99,
+        "feasible": true,
+        "target": 0.4742,
+        "acc_at_tau": 0.4792,
+        "rr_at_tau": 0.1111
+      },
+      "dev_acc": 0.4792,
+      "dev_rr": 0.1111
+    },
+    "signal": {
+      "tau": 0.01,
+      "report": {
+        "n": 144,
+        "tau": 0.01,
+        "feasible": true,
+        "target": 0.4742,
+        "acc_at_tau": 0.4792,
+        "rr_at_tau": 0.9792
+      },
+      "dev_acc": 0.4792,
+      "dev_rr": 0.9792
+    }
+  }
+}

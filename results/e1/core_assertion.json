@@ -1,0 +1,12 @@
+{
+  "status": "PASS",
+  "rr_legalgate": 0.09,
+  "rr_alwaysrag": 1.0,
+  "rr_ratio": 0.09,
+  "rr_condition": "RR_lg 0.09 ≤ 0.6 × RR_ar 0.6 → True",
+  "acc_legalgate": 0.6144,
+  "acc_alwaysrag": 0.5551,
+  "acc_condition": "acc_lg 0.6144 ≥ acc_ar − 0.01 0.5451 → True",
+  "rr_ok": true,
+  "acc_ok": true
+}

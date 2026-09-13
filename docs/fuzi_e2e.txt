@@ -1,0 +1,18 @@
+[PASS] 回答模型是 fuzi-mingcha-v1_0  llm_name=fuzi-mingcha-v1_0
+[PASS] 走 HF（transformers）后端  llm_backend=hf
+[PASS] 精度为 float16（CPU 内存可行）  llm_dtype=float16
+[PASS] 非流式回答非空  31 字
+[PASS] 回答含中文（编码正确）  
+[PASS] trace 记录了后端  hf
+[PASS] 两轮文本完全一致（同键同参）  
+[FAIL] 第二轮明显更快（缓存生效）  0.0s vs 0.0s
+[PASS] 有 stage 事件  ['generate']
+[PASS] 有 delta 增量  7 片
+[PASS] done.answer 非空  
+[PASS] delta 拼接 == done.answer（权威全文一致）  
+[PASS] 流式回答含中文  
+
+模型：models/fuzi-mingcha-v1_0
+精度：float16
+上限：16 token
+首轮 0.0s / 缓存轮 0.0s / 流式 140.1s

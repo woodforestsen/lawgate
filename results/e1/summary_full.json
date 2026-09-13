@@ -1,0 +1,466 @@
+{
+  "rows": [
+    {
+      "n": 944,
+      "acc": 0.5011,
+      "rr": 0.0,
+      "arc": 0.0,
+      "lac": 0.0,
+      "tvc": 0.2396,
+      "tvc_n": 96,
+      "case_verify_acc": null,
+      "case_verify_n": 0,
+      "invalid_law_citation_rate": 0.0932,
+      "slot_inherit_acc": 0.0,
+      "slot_inherit_n": 160,
+      "p50_ms": 1577.9,
+      "p95_ms": 2238.2,
+      "mean_ms": 1581.7,
+      "mean_tokens": 200.9,
+      "total_tokens": 189664,
+      "n_refusal": 90,
+      "method": "neverrag",
+      "label": "Never-RAG（不检索）",
+      "seed": 0,
+      "split": "test",
+      "tau_scale": 1.0,
+      "by_bucket": {
+        "b1": {
+          "n": 160,
+          "acc": 0.5563,
+          "rr": 0.0
+        },
+        "b2": {
+          "n": 304,
+          "acc": 0.625,
+          "rr": 0.0
+        },
+        "b3": {
+          "n": 160,
+          "acc": 0.5188,
+          "rr": 0.0
+        },
+        "b4": {
+          "n": 240,
+          "acc": 0.4625,
+          "rr": 0.0
+        }
+      },
+      "channel_mix": {
+        "none": 944
+      }
+    },
+    {
+      "n": 944,
+      "acc": 0.5551,
+      "rr": 1.0,
+      "arc": 1.0,
+      "lac": 1.0,
+      "tvc": 0.3333,
+      "tvc_n": 96,
+      "case_verify_acc": null,
+      "case_verify_n": 0,
+      "invalid_law_citation_rate": 0.0985,
+      "slot_inherit_acc": 0.0,
+      "slot_inherit_n": 160,
+      "p50_ms": 1581.0,
+      "p95_ms": 2244.1,
+      "mean_ms": 1960.2,
+      "mean_tokens": 211.8,
+      "total_tokens": 199903,
+      "n_refusal": 61,
+      "method": "alwaysrag",
+      "label": "Always-RAG（恒检索）",
+      "seed": 0,
+      "split": "test",
+      "tau_scale": 1.0,
+      "by_bucket": {
+        "b1": {
+          "n": 160,
+          "acc": 0.5938,
+          "rr": 1.0
+        },
+        "b2": {
+          "n": 304,
+          "acc": 0.6974,
+          "rr": 1.0
+        },
+        "b3": {
+          "n": 160,
+          "acc": 0.6438,
+          "rr": 1.0
+        },
+        "b4": {
+          "n": 240,
+          "acc": 0.475,
+          "rr": 1.0
+        }
+      },
+      "channel_mix": {
+        "always": 944
+      }
+    },
+    {
+      "n": 944,
+      "acc": 0.5201,
+      "rr": 0.3051,
+      "arc": 0.3051,
+      "lac": 0.3051,
+      "tvc": 0.3438,
+      "tvc_n": 96,
+      "case_verify_acc": null,
+      "case_verify_n": 0,
+      "invalid_law_citation_rate": 0.0869,
+      "slot_inherit_acc": 0.0,
+      "slot_inherit_n": 160,
+      "p50_ms": 6513.2,
+      "p95_ms": 8397.1,
+      "mean_ms": 6897.7,
+      "mean_tokens": 206.0,
+      "total_tokens": 194436,
+      "n_refusal": 72,
+      "method": "targ",
+      "label": "TARG（单全局τ）",
+      "seed": 0,
+      "split": "test",
+      "tau_scale": 1.0,
+      "by_bucket": {
+        "b1": {
+          "n": 160,
+          "acc": 0.5437,
+          "rr": 0.25
+        },
+        "b2": {
+          "n": 304,
+          "acc": 0.6711,
+          "rr": 0.1546
+        },
+        "b3": {
+          "n": 160,
+          "acc": 0.5437,
+          "rr": 0.3438
+        },
+        "b4": {
+          "n": 240,
+          "acc": 0.4708,
+          "rr": 0.4875
+        }
+      },
+      "channel_mix": {
+        "A": 656,
+        "C": 288
+      }
+    },
+    {
+      "n": 944,
+      "acc": 0.5636,
+      "rr": 0.8591,
+      "arc": 0.8591,
+      "lac": 0.8591,
+      "tvc": 0.3958,
+      "tvc_n": 96,
+      "case_verify_acc": null,
+      "case_verify_n": 0,
+      "invalid_law_citation_rate": 0.0922,
+      "slot_inherit_acc": 0.0,
+      "slot_inherit_n": 160,
+      "p50_ms": 164.0,
+      "p95_ms": 224.4,
+      "mean_ms": 485.8,
+      "mean_tokens": 211.8,
+      "total_tokens": 199948,
+      "n_refusal": 65,
+      "method": "complexity",
+      "label": "Complexity（启发式）",
+      "seed": 0,
+      "split": "test",
+      "tau_scale": 1.0,
+      "by_bucket": {
+        "b1": {
+          "n": 160,
+          "acc": 0.5938,
+          "rr": 0.9875
+        },
+        "b2": {
+          "n": 304,
+          "acc": 0.7237,
+          "rr": 0.5822
+        },
+        "b3": {
+          "n": 160,
+          "acc": 0.6438,
+          "rr": 1.0
+        },
+        "b4": {
+          "n": 240,
+          "acc": 0.475,
+          "rr": 1.0
+        }
+      },
+      "channel_mix": {
+        "cx-C": 811,
+        "cx-A": 133
+      }
+    },
+    {
+      "n": 944,
+      "acc": 0.5371,
+      "rr": 0.0,
+      "arc": 0.0,
+      "lac": 0.0,
+      "tvc": 0.3542,
+      "tvc_n": 96,
+      "case_verify_acc": null,
+      "case_verify_n": 0,
+      "invalid_law_citation_rate": 0.09,
+      "slot_inherit_acc": 0.0,
+      "slot_inherit_n": 160,
+      "p50_ms": 1589.5,
+      "p95_ms": 2133.6,
+      "mean_ms": 1580.0,
+      "mean_tokens": 221.8,
+      "total_tokens": 209399,
+      "n_refusal": 96,
+      "method": "legal_llm",
+      "label": "Legal-LLM*（法律人设代理）",
+      "seed": 0,
+      "split": "test",
+      "tau_scale": 1.0,
+      "by_bucket": {
+        "b1": {
+          "n": 160,
+          "acc": 0.5625,
+          "rr": 0.0
+        },
+        "b2": {
+          "n": 304,
+          "acc": 0.6809,
+          "rr": 0.0
+        },
+        "b3": {
+          "n": 160,
+          "acc": 0.5813,
+          "rr": 0.0
+        },
+        "b4": {
+          "n": 240,
+          "acc": 0.4875,
+          "rr": 0.0
+        }
+      },
+      "channel_mix": {
+        "legal_persona": 944
+      }
+    },
+    {
+      "n": 944,
+      "acc": 0.6144,
+      "rr": 0.09,
+      "arc": 0.09,
+      "lac": 0.09,
+      "tvc": 0.9375,
+      "tvc_n": 96,
+      "case_verify_acc": 1.0,
+      "case_verify_n": 67,
+      "invalid_law_citation_rate": 0.0042,
+      "slot_inherit_acc": 0.0,
+      "slot_inherit_n": 160,
+      "p50_ms": 9.3,
+      "p95_ms": 192.8,
+      "mean_ms": 382.3,
+      "mean_tokens": 338.8,
+      "total_tokens": 319795,
+      "n_refusal": 148,
+      "method": "legalgate",
+      "label": "CA-LegalGate（本项目）",
+      "seed": 0,
+      "split": "test",
+      "tau_scale": 1.0,
+      "by_bucket": {
+        "b1": {
+          "n": 173,
+          "acc": 0.5838,
+          "rr": 0.4913
+        },
+        "b2": {
+          "n": 313,
+          "acc": 0.8211,
+          "rr": 0.0
+        },
+        "b3": {
+          "n": 218,
+          "acc": 0.6468,
+          "rr": 0.0
+        },
+        "b4": {
+          "n": 240,
+          "acc": 0.3375,
+          "rr": 0.0
+        }
+      },
+      "channel_mix": {
+        "A": 291,
+        "B": 568,
+        "C": 85
+      }
+    }
+  ],
+  "summary": [
+    {
+      "method": "neverrag",
+      "label": "Never-RAG（不检索）",
+      "seeds": 1,
+      "split": "test",
+      "acc": 0.5011,
+      "acc_std": 0.0,
+      "rr": 0.0,
+      "rr_std": 0.0,
+      "arc": 0.0,
+      "arc_std": 0.0,
+      "lac": 0.0,
+      "lac_std": 0.0,
+      "tvc": 0.2396,
+      "tvc_std": 0.0,
+      "p50_ms": 1577.9,
+      "p50_ms_std": 0.0,
+      "p95_ms": 2238.2,
+      "p95_ms_std": 0.0,
+      "mean_tokens": 200.9,
+      "mean_tokens_std": 0.0,
+      "invalid_law_citation_rate": 0.0932,
+      "invalid_law_citation_rate_std": 0.0,
+      "n": 944.0,
+      "n_std": 0.0
+    },
+    {
+      "method": "alwaysrag",
+      "label": "Always-RAG（恒检索）",
+      "seeds": 1,
+      "split": "test",
+      "acc": 0.5551,
+      "acc_std": 0.0,
+      "rr": 1.0,
+      "rr_std": 0.0,
+      "arc": 1.0,
+      "arc_std": 0.0,
+      "lac": 1.0,
+      "lac_std": 0.0,
+      "tvc": 0.3333,
+      "tvc_std": 0.0,
+      "p50_ms": 1581.0,
+      "p50_ms_std": 0.0,
+      "p95_ms": 2244.1,
+      "p95_ms_std": 0.0,
+      "mean_tokens": 211.8,
+      "mean_tokens_std": 0.0,
+      "invalid_law_citation_rate": 0.0985,
+      "invalid_law_citation_rate_std": 0.0,
+      "n": 944.0,
+      "n_std": 0.0
+    },
+    {
+      "method": "targ",
+      "label": "TARG（单全局τ）",
+      "seeds": 1,
+      "split": "test",
+      "acc": 0.5201,
+      "acc_std": 0.0,
+      "rr": 0.3051,
+      "rr_std": 0.0,
+      "arc": 0.3051,
+      "arc_std": 0.0,
+      "lac": 0.3051,
+      "lac_std": 0.0,
+      "tvc": 0.3438,
+      "tvc_std": 0.0,
+      "p50_ms": 6513.2,
+      "p50_ms_std": 0.0,
+      "p95_ms": 8397.1,
+      "p95_ms_std": 0.0,
+      "mean_tokens": 206.0,
+      "mean_tokens_std": 0.0,
+      "invalid_law_citation_rate": 0.0869,
+      "invalid_law_citation_rate_std": 0.0,
+      "n": 944.0,
+      "n_std": 0.0
+    },
+    {
+      "method": "complexity",
+      "label": "Complexity（启发式）",
+      "seeds": 1,
+      "split": "test",
+      "acc": 0.5636,
+      "acc_std": 0.0,
+      "rr": 0.8591,
+      "rr_std": 0.0,
+      "arc": 0.8591,
+      "arc_std": 0.0,
+      "lac": 0.8591,
+      "lac_std": 0.0,
+      "tvc": 0.3958,
+      "tvc_std": 0.0,
+      "p50_ms": 164.0,
+      "p50_ms_std": 0.0,
+      "p95_ms": 224.4,
+      "p95_ms_std": 0.0,
+      "mean_tokens": 211.8,
+      "mean_tokens_std": 0.0,
+      "invalid_law_citation_rate": 0.0922,
+      "invalid_law_citation_rate_std": 0.0,
+      "n": 944.0,
+      "n_std": 0.0
+    },
+    {
+      "method": "legal_llm",
+      "label": "Legal-LLM*（法律人设代理）",
+      "seeds": 1,
+      "split": "test",
+      "acc": 0.5371,
+      "acc_std": 0.0,
+      "rr": 0.0,
+      "rr_std": 0.0,
+      "arc": 0.0,
+      "arc_std": 0.0,
+      "lac": 0.0,
+      "lac_std": 0.0,
+      "tvc": 0.3542,
+      "tvc_std": 0.0,
+      "p50_ms": 1589.5,
+      "p50_ms_std": 0.0,
+      "p95_ms": 2133.6,
+      "p95_ms_std": 0.0,
+      "mean_tokens": 221.8,
+      "mean_tokens_std": 0.0,
+      "invalid_law_citation_rate": 0.09,
+      "invalid_law_citation_rate_std": 0.0,
+      "n": 944.0,
+      "n_std": 0.0
+    },
+    {
+      "method": "legalgate",
+      "label": "CA-LegalGate（本项目）",
+      "seeds": 1,
+      "split": "test",
+      "acc": 0.6144,
+      "acc_std": 0.0,
+      "rr": 0.09,
+      "rr_std": 0.0,
+      "arc": 0.09,
+      "arc_std": 0.0,
+      "lac": 0.09,
+      "lac_std": 0.0,
+      "tvc": 0.9375,
+      "tvc_std": 0.0,
+      "p50_ms": 9.3,
+      "p50_ms_std": 0.0,
+      "p95_ms": 192.8,
+      "p95_ms_std": 0.0,
+      "mean_tokens": 338.8,
+      "mean_tokens_std": 0.0,
+      "invalid_law_citation_rate": 0.0042,
+      "invalid_law_citation_rate_std": 0.0,
+      "n": 944.0,
+      "n_std": 0.0
+    }
+  ]
+}

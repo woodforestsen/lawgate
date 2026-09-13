@@ -1,0 +1,26 @@
+{
+  "T1": {
+    "alwaysrag": 0.0,
+    "neverrag": 0.0,
+    "legal_llm": 0.0333,
+    "legalgate": 1.0
+  },
+  "T2": {
+    "alwaysrag": 0.1,
+    "neverrag": 0.2667,
+    "legal_llm": 0.0,
+    "legalgate": 0.8667
+  },
+  "T3": {
+    "alwaysrag": 0.4333,
+    "neverrag": 0.6,
+    "legal_llm": 0.5333,
+    "legalgate": 0.8667
+  },
+  "T4": {
+    "alwaysrag": 0.8667,
+    "neverrag": 0.2,
+    "legal_llm": 0.8,
+    "legalgate": 1.0
+  }
+}

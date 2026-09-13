@@ -1,0 +1,427 @@
+{
+  "split": "dev",
+  "n": 236,
+  "need_retrieval_true": 158,
+  "need_retrieval_false": 78,
+  "signals": {
+    "margin": {
+      "auc_uncertainty": 0.5553,
+      "auc_confidence_orientation": 0.4447,
+      "n": 236,
+      "mean_pos": 0.1143,
+      "mean_neg": 0.1129
+    },
+    "entropy": {
+      "auc_uncertainty": 0.5131,
+      "auc_confidence_orientation": 0.4869,
+      "n": 236,
+      "mean_pos": 0.3751,
+      "mean_neg": 0.3712
+    },
+    "variance": {
+      "auc_uncertainty": 0.5565,
+      "auc_confidence_orientation": 0.4435,
+      "n": 236,
+      "mean_pos": 0.2441,
+      "mean_neg": 0.2178
+    },
+    "neglogp": {
+      "auc_uncertainty": 0.492,
+      "auc_confidence_orientation": 0.508,
+      "n": 236,
+      "mean_pos": 0.3653,
+      "mean_neg": 0.3592
+    },
+    "complexity": {
+      "auc_uncertainty": 0.861,
+      "auc_confidence_orientation": 0.139,
+      "n": 236,
+      "mean_pos": 0.6095,
+      "mean_neg": 0.2641
+    }
+  },
+  "raw": {
+    "raw_margin": {
+      "auc_uncertainty": 0.4447,
+      "auc_confidence_orientation": 0.5553,
+      "n": 236,
+      "mean_pos": 2.4988,
+      "mean_neg": 2.7716
+    },
+    "raw_entropy": {
+      "auc_uncertainty": 0.5131,
+      "auc_confidence_orientation": 0.4869,
+      "n": 236,
+      "mean_pos": 1.1237,
+      "mean_neg": 1.1119
+    },
+    "raw_variance": {
+      "auc_uncertainty": 0.5565,
+      "auc_confidence_orientation": 0.4435,
+      "n": 236,
+      "mean_pos": 0.34,
+      "mean_neg": 0.3049
+    },
+    "raw_neglogp": {
+      "auc_uncertainty": 0.492,
+      "auc_confidence_orientation": 0.508,
+      "n": 236,
+      "mean_pos": 0.6186,
+      "mean_neg": 0.6311
+    }
+  },
+  "by_bucket": {
+    "margin": {
+      "b1": {
+        "auc": 0.4662,
+        "n": 60,
+        "label_balance": "40/60",
+        "note": ""
+      },
+      "b2": {
+        "auc": 0.7341,
+        "n": 76,
+        "label_balance": "38/76",
+        "note": ""
+      },
+      "b3": {
+        "auc": null,
+        "n": 40,
+        "label_balance": "40/40",
+        "note": "标签在该桶内恒定，AUC 无定义"
+      },
+      "b4": {
+        "auc": 0.3588,
+        "n": 60,
+        "label_balance": "40/60",
+        "note": ""
+      },
+      "all": {
+        "auc": 0.5553,
+        "n": 236,
+        "label_balance": "158/236",
+        "note": ""
+      }
+    },
+    "entropy": {
+      "b1": {
+        "auc": 0.1938,
+        "n": 60,
+        "label_balance": "40/60",
+        "note": ""
+      },
+      "b2": {
+        "auc": 0.7403,
+        "n": 76,
+        "label_balance": "38/76",
+        "note": ""
+      },
+      "b3": {
+        "auc": null,
+        "n": 40,
+        "label_balance": "40/40",
+        "note": "标签在该桶内恒定，AUC 无定义"
+      },
+      "b4": {
+        "auc": 0.3425,
+        "n": 60,
+        "label_balance": "40/60",
+        "note": ""
+      },
+      "all": {
+        "auc": 0.5131,
+        "n": 236,
+        "label_balance": "158/236",
+        "note": ""
+      }
+    },
+    "variance": {
+      "b1": {
+        "auc": 0.19,
+        "n": 60,
+        "label_balance": "40/60",
+        "note": ""
+      },
+      "b2": {
+        "auc": 0.8199,
+        "n": 76,
+        "label_balance": "38/76",
+        "note": ""
+      },
+      "b3": {
+        "auc": null,
+        "n": 40,
+        "label_balance": "40/40",
+        "note": "标签在该桶内恒定，AUC 无定义"
+      },
+      "b4": {
+        "auc": 0.2775,
+        "n": 60,
+        "label_balance": "40/60",
+        "note": ""
+      },
+      "all": {
+        "auc": 0.5565,
+        "n": 236,
+        "label_balance": "158/236",
+        "note": ""
+      }
+    },
+    "neglogp": {
+      "b1": {
+        "auc": 0.1562,
+        "n": 60,
+        "label_balance": "40/60",
+        "note": ""
+      },
+      "b2": {
+        "auc": 0.7445,
+        "n": 76,
+        "label_balance": "38/76",
+        "note": ""
+      },
+      "b3": {
+        "auc": null,
+        "n": 40,
+        "label_balance": "40/40",
+        "note": "标签在该桶内恒定，AUC 无定义"
+      },
+      "b4": {
+        "auc": 0.3025,
+        "n": 60,
+        "label_balance": "40/60",
+        "note": ""
+      },
+      "all": {
+        "auc": 0.492,
+        "n": 236,
+        "label_balance": "158/236",
+        "note": ""
+      }
+    },
+    "complexity": {
+      "b1": {
+        "auc": 0.6056,
+        "n": 60,
+        "label_balance": "40/60",
+        "note": ""
+      },
+      "b2": {
+        "auc": 0.9578,
+        "n": 76,
+        "label_balance": "38/76",
+        "note": ""
+      },
+      "b3": {
+        "auc": null,
+        "n": 40,
+        "label_balance": "40/40",
+        "note": "标签在该桶内恒定，AUC 无定义"
+      },
+      "b4": {
+        "auc": 0.8219,
+        "n": 60,
+        "label_balance": "40/60",
+        "note": ""
+      },
+      "all": {
+        "auc": 0.861,
+        "n": 236,
+        "label_balance": "158/236",
+        "note": ""
+      }
+    }
+  },
+  "by_category": {
+    "margin": {
+      "case": {
+        "auc": null,
+        "n": 40,
+        "note": "类别内标签恒定或样本不足"
+      },
+      "case_verify": {
+        "auc": null,
+        "n": 20,
+        "note": "类别内标签恒定或样本不足"
+      },
+      "concept": {
+        "auc": null,
+        "n": 40,
+        "note": "类别内标签恒定或样本不足"
+      },
+      "multi-turn": {
+        "auc": 0.3588,
+        "n": 60,
+        "label_balance": "40/60"
+      },
+      "provision": {
+        "auc": 0.9109,
+        "n": 52,
+        "label_balance": "31/52"
+      },
+      "temporal_trap": {
+        "auc": 0.7143,
+        "n": 24,
+        "label_balance": "7/24"
+      }
+    },
+    "entropy": {
+      "case": {
+        "auc": null,
+        "n": 40,
+        "note": "类别内标签恒定或样本不足"
+      },
+      "case_verify": {
+        "auc": null,
+        "n": 20,
+        "note": "类别内标签恒定或样本不足"
+      },
+      "concept": {
+        "auc": null,
+        "n": 40,
+        "note": "类别内标签恒定或样本不足"
+      },
+      "multi-turn": {
+        "auc": 0.3425,
+        "n": 60,
+        "label_balance": "40/60"
+      },
+      "provision": {
+        "auc": 0.977,
+        "n": 52,
+        "label_balance": "31/52"
+      },
+      "temporal_trap": {
+        "auc": 0.7479,
+        "n": 24,
+        "label_balance": "7/24"
+      }
+    },
+    "variance": {
+      "case": {
+        "auc": null,
+        "n": 40,
+        "note": "类别内标签恒定或样本不足"
+      },
+      "case_verify": {
+        "auc": null,
+        "n": 20,
+        "note": "类别内标签恒定或样本不足"
+      },
+      "concept": {
+        "auc": null,
+        "n": 40,
+        "note": "类别内标签恒定或样本不足"
+      },
+      "multi-turn": {
+        "auc": 0.2775,
+        "n": 60,
+        "label_balance": "40/60"
+      },
+      "provision": {
+        "auc": 0.9647,
+        "n": 52,
+        "label_balance": "31/52"
+      },
+      "temporal_trap": {
+        "auc": 0.7983,
+        "n": 24,
+        "label_balance": "7/24"
+      }
+    },
+    "neglogp": {
+      "case": {
+        "auc": null,
+        "n": 40,
+        "note": "类别内标签恒定或样本不足"
+      },
+      "case_verify": {
+        "auc": null,
+        "n": 20,
+        "note": "类别内标签恒定或样本不足"
+      },
+      "concept": {
+        "auc": null,
+        "n": 40,
+        "note": "类别内标签恒定或样本不足"
+      },
+      "multi-turn": {
+        "auc": 0.3025,
+        "n": 60,
+        "label_balance": "40/60"
+      },
+      "provision": {
+        "auc": 0.9831,
+        "n": 52,
+        "label_balance": "31/52"
+      },
+      "temporal_trap": {
+        "auc": 0.7731,
+        "n": 24,
+        "label_balance": "7/24"
+      }
+    },
+    "complexity": {
+      "case": {
+        "auc": null,
+        "n": 40,
+        "note": "类别内标签恒定或样本不足"
+      },
+      "case_verify": {
+        "auc": null,
+        "n": 20,
+        "note": "类别内标签恒定或样本不足"
+      },
+      "concept": {
+        "auc": null,
+        "n": 40,
+        "note": "类别内标签恒定或样本不足"
+      },
+      "multi-turn": {
+        "auc": 0.8219,
+        "n": 60,
+        "label_balance": "40/60"
+      },
+      "provision": {
+        "auc": 1.0,
+        "n": 52,
+        "label_balance": "31/52"
+      },
+      "temporal_trap": {
+        "auc": 0.9706,
+        "n": 24,
+        "label_balance": "7/24"
+      }
+    }
+  },
+  "verdict": {
+    "best_signal": "complexity",
+    "best_auc": 0.861,
+    "tier": "绿灯",
+    "action": "直接使用该信号做默认门控",
+    "thresholds": {
+      "green": 0.75,
+      "amber": 0.6
+    },
+    "buckets_signal_informative": [
+      [
+        "b2",
+        0.8199
+      ]
+    ],
+    "buckets_signal_uninformative": [
+      [
+        "b1",
+        0.19
+      ],
+      [
+        "b4",
+        0.2775
+      ]
+    ],
+    "complexity_auc": 0.861,
+    "simpson_note": "汇总 AUC 与分桶 AUC 方向相反时即为辛普森悖论：need_retrieval 标签由类别规则决定，桶间标签分布差异主导了汇总 AUC，掩蔽了桶内的真实判别力。故本项目的门控按桶取用信号（见 gate/complexity.py）。"
+  },
+  "dataset_caveat": "need_retrieval 标签由规则化构造（非人工标注），且 case 类为合成文书、民法典仅覆盖 62 条关键条文；因此本 AUC 只反映「信号与构造标签的一致性」，不能等同于人工标注下的真实判别力。",
+  "construct_overlap_caveat": "**复杂度评分的高 AUC 有构造重叠成分，必须打折解读**：need_retrieval 标签本身由类别规则生成（case 恒为需检索、provision 按问法、concept 40% 随机），而复杂度评分显式含 category_prior 与 topic 特征，两者共享同一套规则来源。因此 0.861 中相当一部分是『用类别规则预测类别规则』，并非对真实检索需求的判别力。判定这一点的证据是 by_category 表：若复杂度评分在**类别内**（标签仍混合）的 AUC 也显著 >0.5，才说明它捕捉到了类别之外的实例级信息。正式结论以上述类别内 AUC 为准；本项目的默认路由因此只在 b2 依赖神经信号、其余桶用复杂度评分，并在 E1/E2 中同时报告 signal / complexity / hybrid 三种门控模式的实际 acc–RR 表现，让结论由端到端实验而非 AUC 决定。"
+}

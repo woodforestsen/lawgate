@@ -1,0 +1,200 @@
+{
+  "split": "test_e4",
+  "per_method": {
+    "neverrag": {
+      "method": "neverrag",
+      "by_turn": {
+        "turn0": {
+          "n": 20,
+          "acc": 0.65,
+          "rr": 0.0,
+          "slot_inherit_acc": null,
+          "slot_inherit_n": 0
+        },
+        "turn1": {
+          "n": 20,
+          "acc": 0.65,
+          "rr": 0.0,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 20
+        },
+        "turn2": {
+          "n": 20,
+          "acc": 0.4,
+          "rr": 0.0,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 20
+        }
+      },
+      "slot_inherit": {
+        "n_should_inherit": 40,
+        "n_ok": 0,
+        "error_rate": 1.0
+      },
+      "overall": {
+        "n": 60,
+        "acc": 0.5667,
+        "rr": 0.0,
+        "mean_tokens": 204.8
+      }
+    },
+    "alwaysrag": {
+      "method": "alwaysrag",
+      "by_turn": {
+        "turn0": {
+          "n": 20,
+          "acc": 0.65,
+          "rr": 1.0,
+          "slot_inherit_acc": null,
+          "slot_inherit_n": 0
+        },
+        "turn1": {
+          "n": 20,
+          "acc": 0.5,
+          "rr": 1.0,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 20
+        },
+        "turn2": {
+          "n": 20,
+          "acc": 0.45,
+          "rr": 1.0,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 20
+        }
+      },
+      "slot_inherit": {
+        "n_should_inherit": 40,
+        "n_ok": 0,
+        "error_rate": 1.0
+      },
+      "overall": {
+        "n": 60,
+        "acc": 0.5333,
+        "rr": 1.0,
+        "mean_tokens": 221.5
+      }
+    },
+    "legalgate": {
+      "method": "legalgate",
+      "by_turn": {
+        "turn0": {
+          "n": 20,
+          "acc": 0.6,
+          "rr": 0.0,
+          "slot_inherit_acc": null,
+          "slot_inherit_n": 0
+        },
+        "turn1": {
+          "n": 20,
+          "acc": 0.65,
+          "rr": 0.0,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 20
+        },
+        "turn2": {
+          "n": 20,
+          "acc": 0.0,
+          "rr": 0.0,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 20
+        }
+      },
+      "slot_inherit": {
+        "n_should_inherit": 40,
+        "n_ok": 0,
+        "error_rate": 1.0
+      },
+      "overall": {
+        "n": 60,
+        "acc": 0.4167,
+        "rr": 0.0,
+        "mean_tokens": 402.9
+      }
+    }
+  },
+  "trend_rows": [
+    {
+      "method": "neverrag",
+      "turn_id": 0,
+      "acc": 0.65,
+      "rr": 0.0,
+      "slot_inherit_acc": null,
+      "slot_inherit_n": 0,
+      "n": 20
+    },
+    {
+      "method": "neverrag",
+      "turn_id": 1,
+      "acc": 0.65,
+      "rr": 0.0,
+      "slot_inherit_acc": 0.0,
+      "slot_inherit_n": 20,
+      "n": 20
+    },
+    {
+      "method": "neverrag",
+      "turn_id": 2,
+      "acc": 0.4,
+      "rr": 0.0,
+      "slot_inherit_acc": 0.0,
+      "slot_inherit_n": 20,
+      "n": 20
+    },
+    {
+      "method": "alwaysrag",
+      "turn_id": 0,
+      "acc": 0.65,
+      "rr": 1.0,
+      "slot_inherit_acc": null,
+      "slot_inherit_n": 0,
+      "n": 20
+    },
+    {
+      "method": "alwaysrag",
+      "turn_id": 1,
+      "acc": 0.5,
+      "rr": 1.0,
+      "slot_inherit_acc": 0.0,
+      "slot_inherit_n": 20,
+      "n": 20
+    },
+    {
+      "method": "alwaysrag",
+      "turn_id": 2,
+      "acc": 0.45,
+      "rr": 1.0,
+      "slot_inherit_acc": 0.0,
+      "slot_inherit_n": 20,
+      "n": 20
+    },
+    {
+      "method": "legalgate",
+      "turn_id": 0,
+      "acc": 0.6,
+      "rr": 0.0,
+      "slot_inherit_acc": null,
+      "slot_inherit_n": 0,
+      "n": 20
+    },
+    {
+      "method": "legalgate",
+      "turn_id": 1,
+      "acc": 0.65,
+      "rr": 0.0,
+      "slot_inherit_acc": 0.0,
+      "slot_inherit_n": 20,
+      "n": 20
+    },
+    {
+      "method": "legalgate",
+      "turn_id": 2,
+      "acc": 0.0,
+      "rr": 0.0,
+      "slot_inherit_acc": 0.0,
+      "slot_inherit_n": 20,
+      "n": 20
+    }
+  ],
+  "note": "手册 S6.7 要求 test_multiturn 全量（240 条）。本机 CPU-only 预算下按 docs/deviations.md D19 使用 test_e4 子集（20 组 × 3 轮 = 60 条），每组三整轮完整入样，故轮次趋势可比。"
+}

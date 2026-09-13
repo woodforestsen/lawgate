@@ -1,0 +1,69 @@
+[2026-09-13T03:46:00.027Z] [INFO] [RealtimeSubtitle] Sent browser_engine_media_request_audio_segment to C++
+[2026-09-13T03:46:00.029Z] [LOG] [RealtimeSubtitle] this.state=== disconnected
+[2026-09-13T03:46:00.029Z] [INFO] [RealtimeSubtitle] Sent subtitleSocketConnect to main process
+[2026-09-13T03:46:00.073Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:00.073Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:00.964Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:00.964Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:01.196Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:01.197Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:02.622Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:02.622Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:02.685Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:02.685Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:04.065Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:04.064Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:05.019Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:05.020Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:05.062Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Connection timeout","fatal":true}
+[2026-09-13T03:46:05.062Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Connection timeout","fatal":true}
+[2026-09-13T03:46:09.433Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:09.436Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:10.028Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Connection timeout","fatal":true}
+[2026-09-13T03:46:10.028Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Connection timeout","fatal":true}
+[2026-09-13T03:46:10.203Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:10.203Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:14.428Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Connection timeout","fatal":true}
+[2026-09-13T03:46:14.431Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Connection timeout","fatal":true}
+[2026-09-13T03:46:18.237Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:18.241Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:19.119Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:19.120Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:19.120Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:19.120Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:19.120Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:19.120Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:21.224Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:21.225Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:21.225Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:21.226Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:21.226Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:21.226Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:22.188Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:22.189Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:22.189Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:22.189Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:22.189Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:22.189Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:23.229Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Connection timeout","fatal":true}
+[2026-09-13T03:46:23.229Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Connection timeout","fatal":true}
+[2026-09-13T03:46:23.321Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:23.322Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:23.322Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:23.322Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:23.322Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:23.323Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:24.120Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Connection timeout","fatal":true}
+[2026-09-13T03:46:24.120Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Connection timeout","fatal":true}
+[2026-09-13T03:46:24.981Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:24.981Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:24.982Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:24.982Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:24.982Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:24.982Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:25.015Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:25.015Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"getaddrinfo ENOTFOUND netdiskrecord.baidupcs.com","fatal":true}
+[2026-09-13T03:46:25.015Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:25.015Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:25.016Z] [ERROR] [RealtimeSubtitle] 监听错误  Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}
+[2026-09-13T03:46:25.016Z] [ERROR] [RealtimeSubtitle] Realtime subtitle error: {"code":-1,"msg":"Max reconnect attempts reached","fatal":true}

@@ -1,0 +1,48 @@
+# ---- 凭据：绝不提交 ----
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+secrets.*
+
+# ---- 模型权重（体积大，由 scripts/fetch_hf_files.py 重新拉取）----
+models/
+*.safetensors
+*.bin
+*.gguf
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ---- 运行产物：缓存与中间分片可重建 ----
+data/kb/gen_cache.db
+data/kb/gen_cache.db-wal
+data/kb/gen_cache.db-shm
+data/kb/chroma/
+results/*/shards/
+results/dev_calib/
+results/pilot/
+results/timing/
+docs/_*.log
+docs/_*.txt
+docs/_*.err
+docs/pipeline.log
+
+# ---- 临时/演示产物（避免与真实结果混淆）----
+results/_demo/
+figures/_demo/
+data/_tmp_*/
+
+# ---- 保留：评测集与结论性结果必须入库 ----
+!data/benchmark/*.jsonl
+!results/*/summary.csv
+!results/*/*.json
+!figures/**/*.png

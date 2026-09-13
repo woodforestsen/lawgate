@@ -1,0 +1,10 @@
+########## E6 ##########
+{"n": 100, "matrix": [[0, 0, 0, 0, 30], [0, 30, 0, 0, 0], [0, 0, 0, 25, 0], [15, 0, 0, 0, 0]], "by_subtype": {"V1": {"n": 30, "correct": 30, "acc": 1.0, "levels": {"核验通过": 30}}, "V2": {"n": 30, "correct": 30, "acc": 1.0, "levels": {"不存在": 30}}, "V3": {"n": 25, "correct": 25, "acc": 1.0, "levels": {"存在但案由不符": 25}}, "V4": {"n": 15, "correct": 15, "acc": 1.0, "levels": {"格式非法": 15}}}}
+{"precision": 1.0, "recall": 1.0, "f1": 1.0, "tp": 30, "fp": 0, "fn": 0, "tn": 70}
+########## E5 limit4 ##########
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:   0%|          | 1/338 [00:00<01:00,  5.59it/s]Loading weights:  61%|██████    | 207/338 [00:00<00:00, 889.85it/s]Loading weights:  95%|█████████▍| 321/338 [00:00<00:00, 506.10it/s]Loading weights: 100%|██████████| 338/338 [00:00<00:00, 484.07it/s]
+Loading weights:   0%|          | 0/71 [00:00<?, ?it/s]Loading weights: 100%|██████████| 71/71 [00:00<00:00, 5960.68it/s]
+  alwaysrag: 4 条 -> D:\桌面\lawgate\results\e5\alwaysrag_seed0_temporal_trap.jsonl
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:  18%|█▊        | 61/338 [00:00<00:00, 588.19it/s]Loading weights:  36%|███▌      | 120/338 [00:00<00:00, 526.40it/s]Loading weights:  51%|█████     | 173/338 [00:00<00:00, 370.20it/s]Loading weights:  63%|██████▎   | 214/338 [00:00<00:00, 373.88it/s]Loading weights:  75%|███████▌  | 254/338 [00:00<00:00, 341.93it/s]Loading weights:  86%|████████▌ | 290/338 [00:00<00:00, 311.22it/s]Loading weights:  96%|█████████▌| 323/338 [00:01<00:00, 244.57it/s]Loading weights: 100%|██████████| 338/338 [00:01<00:00, 287.82it/s]
+  neverrag: 4 条 -> D:\桌面\lawgate\results\e5\neverrag_seed0_temporal_trap.jsonl
+Loading weights:   0%|          | 0/338 [00:00<?, ?it/s]Loading weights:   0%|          | 1/338 [00:00<01:20,  4.20it/s]Loading weights:  46%|████▌     | 155/338 [00:00<00:00, 580.27it/s]Loading weights:  73%|███████▎  | 246/338 [00:00<00:00, 494.57it/s]Loading weights:  97%|█████████▋| 329/338 [00:00<00:00, 581.16it/s]Loading weights: 100%|██████████| 338/338 [00:00<00:00, 515.27it/s]

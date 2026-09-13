@@ -1,0 +1,23 @@
+{
+  "date": "2026-09-10",
+  "src": "data\\_tmp_j",
+  "n_files": 1,
+  "imported": 1,
+  "skipped_no_case_no": 0,
+  "dry_run": true,
+  "causes": {
+    "民间借贷纠纷": 1
+  },
+  "missing_causes": [
+    "劳动争议",
+    "离婚纠纷",
+    "房屋租赁合同纠纷"
+  ],
+  "bad_examples": [],
+  "next_steps": [
+    "重跑 python -m lawgate.knowledge.build_vector（重建向量库）",
+    "重跑 python scripts/e6_case_verify.py（E6 结论口径升级为真实文书库）",
+    "重跑 python scripts/build_benchmark.py --seed 42（case 类金标换代）",
+    "更新 docs/DATA_GAP.md 中该缺口的完成状态"
+  ]
+}

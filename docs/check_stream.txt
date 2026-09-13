@@ -1,0 +1,84 @@
+==============================================================================
+CA-LegalGate 流式输出自检（离线，ExtractiveLLM）
+2026-09-13 10:00:14
+==============================================================================
+router 就绪（llm_backend=rule_based）
+
+## 1. 事件序列（stage* → delta+ → done）
+
+### 提问：《合同法》第52条规定哪些情形合同无效？
+  事件序列：['stage', 'delta', 'done']
+  [PASS] 至少 1 个 stage
+  [PASS] 至少 1 个 delta
+  [PASS] 最后一个是 done
+  [PASS] done 只出现一次
+  [PASS] done 后无其它事件
+  [PASS] stage 全在第一个 delta 之前
+  [PASS] done.answer 非空
+  [PASS] done.trace 有必填字段
+  [PASS] 通道 = B　实际 B
+  [PASS] delta 拼接 ≈ done.answer　拼接 476 字 / 全文 476 字
+  [PASS] 答案含中文（编码自检）　⚠️ 《合同法》第52条已随该法已废止。
+原条文（1999）
+
+### 提问：什么是离婚冷静期
+  事件序列：['stage', 'delta', 'done']
+  [PASS] 至少 1 个 stage
+  [PASS] 至少 1 个 delta
+  [PASS] 最后一个是 done
+  [PASS] done 只出现一次
+  [PASS] done 后无其它事件
+  [PASS] stage 全在第一个 delta 之前
+  [PASS] done.answer 非空
+  [PASS] done.trace 有必填字段
+  [PASS] 通道 ∈ {A, C}　实际 A
+  [PASS] 门控字段齐全
+  [PASS] delta 拼接 ≈ done.answer　拼接 51 字 / 全文 51 字
+  [PASS] 答案含中文（编码自检）　【规则兜底后端】未提供参考资料，无法就「什么是离婚冷静期」给
+
+## 2. answer() 与 answer_stream() 同源一致性
+
+### 提问：《合同法》第52条规定哪些情形合同无效？
+  [PASS] 路由判定与 trace 完全一致　answer→B/b2 stream→B/b2
+  [PASS] 答案文本一致
+
+### 提问：什么是离婚冷静期
+  [PASS] 路由判定与 trace 完全一致　answer→A/b1 stream→A/b1
+  [PASS] 答案文本一致
+
+### 提问：（2099）沪01民终88888号 这个案子什么案由
+  [PASS] 路由判定与 trace 完全一致　answer→B/b3 stream→B/b3
+  [PASS] 答案文本一致
+
+## 3. POST /chat/stream（SSE 帧协议，TestClient 真实往返）
+  [PASS] HTTP 200　实际 200
+  [PASS] Content-Type 为 text/event-stream 且带 charset　text/event-stream; charset=utf-8
+  [PASS] 禁缓存头存在　no-cache
+  帧序列：['stage', 'delta', 'done']
+  [PASS] 帧序列符合 stage* → delta+ → done
+  [PASS] delta 累积 ≈ done.answer
+  [PASS] done 带 trace 且通道 = B
+  [PASS] 中文原样传输（不是 \uXXXX、不是乱码）　⚠️ 《合同法》第52条已随该法已废止。
+原条文（1999）：有下列情形之一的，
+  [PASS] 原始报文里没有转义中文　含 0 处 \u
+
+## 4. 生成期异常也必须成帧（event: error）
+  帧序列：['stage', 'delta', 'error']
+  [PASS] 异常后仍发出 error 帧
+  [PASS] error 帧带可读信息　RuntimeError: 模拟生成中途炸掉
+
+## 5. UI 两栏生成长度上限一致
+  Settings.max_new_tokens = 77（本次实验值，原值 192）
+  [PASS] ensure_loaded 把 Settings 的数传进 RouterOptions　实际 77
+  [PASS] router options 生效（右栏真实取值）　实际 77
+  两栏实际请求的 max_tokens：左栏 [77]、右栏 [77]
+  [PASS] 左栏确实发起了生成
+  [PASS] 右栏确实发起了生成
+  [PASS] 左栏 max_tokens = 统一值　{77}
+  [PASS] 右栏 max_tokens = 统一值　{77}
+  [PASS] 两栏上限完全一致
+  参考：RouterOptions().max_new_tokens=192　base.yaml max_new_tokens=192　（本次仍强行用 77 验证显式传递生效）
+
+==============================================================================
+结果：全部通过
+耗时 4.8 s

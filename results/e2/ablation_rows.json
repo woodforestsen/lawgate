@@ -1,0 +1,628 @@
+{
+  "rows": [
+    {
+      "group": "A1",
+      "variant": "full",
+      "arm": "full",
+      "n": 300,
+      "acc": 0.7433,
+      "rr": 0.0533,
+      "lac": 0.0533,
+      "arc": 0.0533,
+      "tvc": 0.9375,
+      "p50_ms": 1.9,
+      "p95_ms": 48.7,
+      "mean_tokens": 250.3,
+      "invalid_law_citation_rate": 0.0133
+    },
+    {
+      "group": "A1",
+      "variant": "no_channel_b",
+      "arm": "no_channel_b",
+      "n": 300,
+      "acc": 0.3233,
+      "rr": 0.1067,
+      "lac": 0.1067,
+      "arc": 0.1067,
+      "tvc": 0.2396,
+      "p50_ms": 3.9,
+      "p95_ms": 70.8,
+      "mean_tokens": 198.1,
+      "invalid_law_citation_rate": 0.2567
+    },
+    {
+      "group": "A2",
+      "variant": "per_bucket_tau",
+      "arm": "per_bucket_tau",
+      "n": 300,
+      "acc": 0.7433,
+      "rr": 0.0533,
+      "lac": 0.0533,
+      "arc": 0.0533,
+      "tvc": 0.9375,
+      "p50_ms": 2.8,
+      "p95_ms": 85.8,
+      "mean_tokens": 250.3,
+      "invalid_law_citation_rate": 0.0133
+    },
+    {
+      "group": "A2",
+      "variant": "single_tau",
+      "arm": "single_tau",
+      "n": 300,
+      "acc": 0.7467,
+      "rr": 0.0467,
+      "lac": 0.0467,
+      "arc": 0.0467,
+      "tvc": 0.9375,
+      "p50_ms": 2.5,
+      "p95_ms": 99.2,
+      "mean_tokens": 249.8,
+      "invalid_law_citation_rate": 0.01
+    },
+    {
+      "group": "A3",
+      "variant": "margin",
+      "arm": "margin",
+      "n": 300,
+      "acc": 0.7433,
+      "rr": 0.0533,
+      "lac": 0.0533,
+      "arc": 0.0533,
+      "tvc": 0.9375,
+      "p50_ms": 2.7,
+      "p95_ms": 66.5,
+      "mean_tokens": 250.3,
+      "invalid_law_citation_rate": 0.0133
+    },
+    {
+      "group": "A3",
+      "variant": "entropy",
+      "arm": "entropy",
+      "n": 300,
+      "acc": 0.7433,
+      "rr": 0.0533,
+      "lac": 0.0533,
+      "arc": 0.0533,
+      "tvc": 0.9375,
+      "p50_ms": 2.6,
+      "p95_ms": 68.4,
+      "mean_tokens": 250.3,
+      "invalid_law_citation_rate": 0.0133
+    },
+    {
+      "group": "A3",
+      "variant": "variance",
+      "arm": "variance",
+      "n": 300,
+      "acc": 0.7433,
+      "rr": 0.0533,
+      "lac": 0.0533,
+      "arc": 0.0533,
+      "tvc": 0.9375,
+      "p50_ms": 2.7,
+      "p95_ms": 76.1,
+      "mean_tokens": 250.3,
+      "invalid_law_citation_rate": 0.0133
+    },
+    {
+      "group": "A3",
+      "variant": "neglogp",
+      "arm": "neglogp",
+      "n": 300,
+      "acc": 0.7433,
+      "rr": 0.0533,
+      "lac": 0.0533,
+      "arc": 0.0533,
+      "tvc": 0.9375,
+      "p50_ms": 2.9,
+      "p95_ms": 62.6,
+      "mean_tokens": 250.3,
+      "invalid_law_citation_rate": 0.0133
+    },
+    {
+      "group": "A3",
+      "variant": "complexity_only",
+      "arm": "complexity_only",
+      "n": 300,
+      "acc": 0.7433,
+      "rr": 0.0533,
+      "lac": 0.0533,
+      "arc": 0.0533,
+      "tvc": 0.9375,
+      "p50_ms": 2.7,
+      "p95_ms": 64.7,
+      "mean_tokens": 250.3,
+      "invalid_law_citation_rate": 0.0133
+    },
+    {
+      "group": "A3",
+      "variant": "signal_only",
+      "arm": "signal_only",
+      "n": 300,
+      "acc": 0.7367,
+      "rr": 0.0,
+      "lac": 0.0,
+      "arc": 0.0,
+      "tvc": 0.9375,
+      "p50_ms": 3.0,
+      "p95_ms": 6.3,
+      "mean_tokens": 249.7,
+      "invalid_law_citation_rate": 0.01
+    },
+    {
+      "group": "A4",
+      "variant": "k8",
+      "arm": "k8",
+      "n": 300,
+      "acc": 0.7433,
+      "rr": 0.0533,
+      "lac": 0.0533,
+      "arc": 0.0533,
+      "tvc": 0.9375,
+      "p50_ms": 2.5,
+      "p95_ms": 63.7,
+      "mean_tokens": 250.3,
+      "invalid_law_citation_rate": 0.0133
+    },
+    {
+      "group": "A4",
+      "variant": "k16",
+      "arm": "k16",
+      "n": 300,
+      "acc": 0.7433,
+      "rr": 0.0533,
+      "lac": 0.0533,
+      "arc": 0.0533,
+      "tvc": 0.9375,
+      "p50_ms": 2.9,
+      "p95_ms": 78.4,
+      "mean_tokens": 250.3,
+      "invalid_law_citation_rate": 0.0133
+    },
+    {
+      "group": "A4",
+      "variant": "k20",
+      "arm": "k20",
+      "n": 300,
+      "acc": 0.7433,
+      "rr": 0.0533,
+      "lac": 0.0533,
+      "arc": 0.0533,
+      "tvc": 0.9375,
+      "p50_ms": 2.5,
+      "p95_ms": 77.0,
+      "mean_tokens": 250.3,
+      "invalid_law_citation_rate": 0.0133
+    },
+    {
+      "group": "A4",
+      "variant": "k32",
+      "arm": "k32",
+      "n": 300,
+      "acc": 0.7433,
+      "rr": 0.0533,
+      "lac": 0.0533,
+      "arc": 0.0533,
+      "tvc": 0.9375,
+      "p50_ms": 2.3,
+      "p95_ms": 64.0,
+      "mean_tokens": 250.3,
+      "invalid_law_citation_rate": 0.0133
+    },
+    {
+      "group": "A4",
+      "variant": "k64",
+      "arm": "k64",
+      "n": 300,
+      "acc": 0.7433,
+      "rr": 0.0533,
+      "lac": 0.0533,
+      "arc": 0.0533,
+      "tvc": 0.9375,
+      "p50_ms": 2.7,
+      "p95_ms": 62.6,
+      "mean_tokens": 250.3,
+      "invalid_law_citation_rate": 0.0133
+    }
+  ],
+  "detail": {
+    "A1": [
+      {
+        "variant": "full",
+        "metrics": {
+          "n": 300,
+          "acc": 0.7433,
+          "rr": 0.0533,
+          "arc": 0.0533,
+          "lac": 0.0533,
+          "tvc": 0.9375,
+          "tvc_n": 96,
+          "case_verify_acc": 1.0,
+          "case_verify_n": 67,
+          "invalid_law_citation_rate": 0.0133,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 40,
+          "p50_ms": 1.9,
+          "p95_ms": 48.7,
+          "mean_ms": 602.2,
+          "mean_tokens": 250.3,
+          "total_tokens": 75083,
+          "n_refusal": 22
+        },
+        "kwargs": {}
+      },
+      {
+        "variant": "no_channel_b",
+        "metrics": {
+          "n": 300,
+          "acc": 0.3233,
+          "rr": 0.1067,
+          "arc": 0.1067,
+          "lac": 0.1067,
+          "tvc": 0.2396,
+          "tvc_n": 96,
+          "case_verify_acc": null,
+          "case_verify_n": 0,
+          "invalid_law_citation_rate": 0.2567,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 40,
+          "p50_ms": 3.9,
+          "p95_ms": 70.8,
+          "mean_ms": 35.5,
+          "mean_tokens": 198.1,
+          "total_tokens": 59427,
+          "n_refusal": 20
+        },
+        "kwargs": {
+          "disable_channel_b": true
+        }
+      }
+    ],
+    "A2": [
+      {
+        "variant": "per_bucket_tau",
+        "metrics": {
+          "n": 300,
+          "acc": 0.7433,
+          "rr": 0.0533,
+          "arc": 0.0533,
+          "lac": 0.0533,
+          "tvc": 0.9375,
+          "tvc_n": 96,
+          "case_verify_acc": 1.0,
+          "case_verify_n": 67,
+          "invalid_law_citation_rate": 0.0133,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 40,
+          "p50_ms": 2.8,
+          "p95_ms": 85.8,
+          "mean_ms": 476.8,
+          "mean_tokens": 250.3,
+          "total_tokens": 75083,
+          "n_refusal": 22
+        },
+        "kwargs": {}
+      },
+      {
+        "variant": "single_tau",
+        "metrics": {
+          "n": 300,
+          "acc": 0.7467,
+          "rr": 0.0467,
+          "arc": 0.0467,
+          "lac": 0.0467,
+          "tvc": 0.9375,
+          "tvc_n": 96,
+          "case_verify_acc": 1.0,
+          "case_verify_n": 67,
+          "invalid_law_citation_rate": 0.01,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 40,
+          "p50_ms": 2.5,
+          "p95_ms": 99.2,
+          "mean_ms": 38.4,
+          "mean_tokens": 249.8,
+          "total_tokens": 74935,
+          "n_refusal": 23
+        },
+        "kwargs": {
+          "single_tau": true,
+          "tau_single": 0.99
+        }
+      }
+    ],
+    "A3": [
+      {
+        "variant": "margin",
+        "metrics": {
+          "n": 300,
+          "acc": 0.7433,
+          "rr": 0.0533,
+          "arc": 0.0533,
+          "lac": 0.0533,
+          "tvc": 0.9375,
+          "tvc_n": 96,
+          "case_verify_acc": 1.0,
+          "case_verify_n": 67,
+          "invalid_law_citation_rate": 0.0133,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 40,
+          "p50_ms": 2.7,
+          "p95_ms": 66.5,
+          "mean_ms": 477.0,
+          "mean_tokens": 250.3,
+          "total_tokens": 75083,
+          "n_refusal": 22
+        },
+        "kwargs": {
+          "signal": "margin"
+        }
+      },
+      {
+        "variant": "entropy",
+        "metrics": {
+          "n": 300,
+          "acc": 0.7433,
+          "rr": 0.0533,
+          "arc": 0.0533,
+          "lac": 0.0533,
+          "tvc": 0.9375,
+          "tvc_n": 96,
+          "case_verify_acc": 1.0,
+          "case_verify_n": 67,
+          "invalid_law_citation_rate": 0.0133,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 40,
+          "p50_ms": 2.6,
+          "p95_ms": 68.4,
+          "mean_ms": 39.9,
+          "mean_tokens": 250.3,
+          "total_tokens": 75083,
+          "n_refusal": 22
+        },
+        "kwargs": {
+          "signal": "entropy"
+        }
+      },
+      {
+        "variant": "variance",
+        "metrics": {
+          "n": 300,
+          "acc": 0.7433,
+          "rr": 0.0533,
+          "arc": 0.0533,
+          "lac": 0.0533,
+          "tvc": 0.9375,
+          "tvc_n": 96,
+          "case_verify_acc": 1.0,
+          "case_verify_n": 67,
+          "invalid_law_citation_rate": 0.0133,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 40,
+          "p50_ms": 2.7,
+          "p95_ms": 76.1,
+          "mean_ms": 46.3,
+          "mean_tokens": 250.3,
+          "total_tokens": 75083,
+          "n_refusal": 22
+        },
+        "kwargs": {
+          "signal": "variance"
+        }
+      },
+      {
+        "variant": "neglogp",
+        "metrics": {
+          "n": 300,
+          "acc": 0.7433,
+          "rr": 0.0533,
+          "arc": 0.0533,
+          "lac": 0.0533,
+          "tvc": 0.9375,
+          "tvc_n": 96,
+          "case_verify_acc": 1.0,
+          "case_verify_n": 67,
+          "invalid_law_citation_rate": 0.0133,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 40,
+          "p50_ms": 2.9,
+          "p95_ms": 62.6,
+          "mean_ms": 44.0,
+          "mean_tokens": 250.3,
+          "total_tokens": 75083,
+          "n_refusal": 22
+        },
+        "kwargs": {
+          "signal": "neglogp"
+        }
+      },
+      {
+        "variant": "complexity_only",
+        "metrics": {
+          "n": 300,
+          "acc": 0.7433,
+          "rr": 0.0533,
+          "arc": 0.0533,
+          "lac": 0.0533,
+          "tvc": 0.9375,
+          "tvc_n": 96,
+          "case_verify_acc": 1.0,
+          "case_verify_n": 67,
+          "invalid_law_citation_rate": 0.0133,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 40,
+          "p50_ms": 2.7,
+          "p95_ms": 64.7,
+          "mean_ms": 37.9,
+          "mean_tokens": 250.3,
+          "total_tokens": 75083,
+          "n_refusal": 22
+        },
+        "kwargs": {
+          "router_mode": "complexity"
+        }
+      },
+      {
+        "variant": "signal_only",
+        "metrics": {
+          "n": 300,
+          "acc": 0.7367,
+          "rr": 0.0,
+          "arc": 0.0,
+          "lac": 0.0,
+          "tvc": 0.9375,
+          "tvc_n": 96,
+          "case_verify_acc": 1.0,
+          "case_verify_n": 67,
+          "invalid_law_citation_rate": 0.01,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 40,
+          "p50_ms": 3.0,
+          "p95_ms": 6.3,
+          "mean_ms": 30.4,
+          "mean_tokens": 249.7,
+          "total_tokens": 74913,
+          "n_refusal": 22
+        },
+        "kwargs": {
+          "router_mode": "signal"
+        }
+      }
+    ],
+    "A4": [
+      {
+        "variant": "k8",
+        "metrics": {
+          "n": 300,
+          "acc": 0.7433,
+          "rr": 0.0533,
+          "arc": 0.0533,
+          "lac": 0.0533,
+          "tvc": 0.9375,
+          "tvc_n": 96,
+          "case_verify_acc": 1.0,
+          "case_verify_n": 67,
+          "invalid_law_citation_rate": 0.0133,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 40,
+          "p50_ms": 2.5,
+          "p95_ms": 63.7,
+          "mean_ms": 470.8,
+          "mean_tokens": 250.3,
+          "total_tokens": 75083,
+          "n_refusal": 22
+        },
+        "kwargs": {
+          "k_draft": 8
+        }
+      },
+      {
+        "variant": "k16",
+        "metrics": {
+          "n": 300,
+          "acc": 0.7433,
+          "rr": 0.0533,
+          "arc": 0.0533,
+          "lac": 0.0533,
+          "tvc": 0.9375,
+          "tvc_n": 96,
+          "case_verify_acc": 1.0,
+          "case_verify_n": 67,
+          "invalid_law_citation_rate": 0.0133,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 40,
+          "p50_ms": 2.9,
+          "p95_ms": 78.4,
+          "mean_ms": 40.0,
+          "mean_tokens": 250.3,
+          "total_tokens": 75083,
+          "n_refusal": 22
+        },
+        "kwargs": {
+          "k_draft": 16
+        }
+      },
+      {
+        "variant": "k20",
+        "metrics": {
+          "n": 300,
+          "acc": 0.7433,
+          "rr": 0.0533,
+          "arc": 0.0533,
+          "lac": 0.0533,
+          "tvc": 0.9375,
+          "tvc_n": 96,
+          "case_verify_acc": 1.0,
+          "case_verify_n": 67,
+          "invalid_law_citation_rate": 0.0133,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 40,
+          "p50_ms": 2.5,
+          "p95_ms": 77.0,
+          "mean_ms": 44.2,
+          "mean_tokens": 250.3,
+          "total_tokens": 75083,
+          "n_refusal": 22
+        },
+        "kwargs": {
+          "k_draft": 20
+        }
+      },
+      {
+        "variant": "k32",
+        "metrics": {
+          "n": 300,
+          "acc": 0.7433,
+          "rr": 0.0533,
+          "arc": 0.0533,
+          "lac": 0.0533,
+          "tvc": 0.9375,
+          "tvc_n": 96,
+          "case_verify_acc": 1.0,
+          "case_verify_n": 67,
+          "invalid_law_citation_rate": 0.0133,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 40,
+          "p50_ms": 2.3,
+          "p95_ms": 64.0,
+          "mean_ms": 35.6,
+          "mean_tokens": 250.3,
+          "total_tokens": 75083,
+          "n_refusal": 22
+        },
+        "kwargs": {
+          "k_draft": 32
+        }
+      },
+      {
+        "variant": "k64",
+        "metrics": {
+          "n": 300,
+          "acc": 0.7433,
+          "rr": 0.0533,
+          "arc": 0.0533,
+          "lac": 0.0533,
+          "tvc": 0.9375,
+          "tvc_n": 96,
+          "case_verify_acc": 1.0,
+          "case_verify_n": 67,
+          "invalid_law_citation_rate": 0.0133,
+          "slot_inherit_acc": 0.0,
+          "slot_inherit_n": 40,
+          "p50_ms": 2.7,
+          "p95_ms": 62.6,
+          "mean_ms": 35.9,
+          "mean_tokens": 250.3,
+          "total_tokens": 75083,
+          "n_refusal": 22
+        },
+        "kwargs": {
+          "k_draft": 64
+        }
+      }
+    ]
+  },
+  "split": "test_e1",
+  "note": "A2 的 single_tau 使用单全局 τ=0.99，来源：calibrate_report.single_tau.hybrid.tau（split=dev_calib, date=2026-09-12）；A3 的 signal_only 即 E0 红灯对应的纯神经信号门控，complexity_only 即手册风险表的降级方案，hybrid（默认）在 A1/A2/A4 的 full/per_bucket_tau 中出现。本表的 split=test_e1（D23：非手册原设定 test 全量）。"
+}

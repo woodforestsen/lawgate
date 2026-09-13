@@ -1,0 +1,96 @@
+
+==============================================================================
+[subsets] E:\Anaconda\python.exe scripts/make_subsets.py
+==============================================================================
+
+==============================================================================
+[subsets] E:\Anaconda\python.exe scripts/make_subsets.py
+==============================================================================
+{
+  "dev_calib": {
+    "n": 144,
+    "by_category": {
+      "temporal_trap": 24,
+      "case_verify": 20,
+      "concept": 16,
+      "provision": 20,
+      "case": 16,
+      "multi-turn": 48
+    },
+    "of_dev_total": 236
+  },
+  "test_e1": {
+    "n": 300,
+    "by_category": {
+      "temporal_trap": 96,
+      "case_verify": 80,
+      "multi-turn": 60,
+      "concept": 24,
+      "provision": 24,
+      "case": 16
+    },
+    "of_test_total": 944
+  }
+}
+dev_calib=144 test_e1=300 test_e4=60
+[subsets] OK 0s
+[subsets] OK 0s
+
+==============================================================================
+[dev-neverrag] E:\Anaconda\python.exe scripts/run_exp.py --exp dev_baseline --method neverrag --seed 0 --split dev_calib --overwrite --max-tokens 192 --threads 4 --progress-every 40
+==============================================================================
+
+==============================================================================
+[dev-neverrag] E:\Anaconda\python.exe scripts/run_exp.py --exp dev_baseline --method neverrag --seed 0 --split dev_calib --overwrite --max-tokens 192 --threads 4 --progress-every 40
+==============================================================================
+[exp dev_baseline] method=neverrag seed=0 split=dev_calib shard=0/1 limit=None
+    [neverrag] 40/144 用时 65s (1.62s/条) 预计总 233s
+    [neverrag] 80/144 用时 119s (1.48s/条) 预计总 213s
+    [neverrag] 120/144 用时 186s (1.55s/条) 预计总 223s
+  -> D:\桌面\lawgate\results\dev_baseline\neverrag_seed0_dev_calib.jsonl
+  acc=0.4583 rr=0.0 lac=0.0 p50=1595.8ms p95=1990.1ms tok=203.9 n=144
+{"enabled": true, "by_kind": {"draft20": {"entries": 337, "tokens": 6661, "seconds": 1787.1}, "draft4": {"entries": 3, "tokens": 12, "seconds": 1.8}, "draft8": {"entries": 4, "tokens": 32, "seconds": 3.5}, "generate": {"entries": 905, "tokens": 109735, "seconds": 51886834670.2}}, "total_entries": 1249, "total_tokens": 116440, "total_compute_seconds": 51886836462.6}
+[dev-neverrag] OK 224s
+[dev-neverrag] OK 224s
+
+==============================================================================
+[dev-alwaysrag] E:\Anaconda\python.exe scripts/run_exp.py --exp dev_baseline --method alwaysrag --seed 0 --split dev_calib --overwrite --max-tokens 192 --threads 4 --progress-every 40
+==============================================================================
+
+==============================================================================
+[dev-alwaysrag] E:\Anaconda\python.exe scripts/run_exp.py --exp dev_baseline --method alwaysrag --seed 0 --split dev_calib --overwrite --max-tokens 192 --threads 4 --progress-every 40
+==============================================================================
+[exp dev_baseline] method=alwaysrag seed=0 split=dev_calib shard=0/1 limit=None
+Loading weights:   0%|          | 0/71 [00:00<?, ?it/s]Loading weights: 100%|██████████| 71/71 [00:00<00:00, 4155.85it/s]
+    [alwaysrag] 40/144 用时 80s (2.00s/条) 预计总 288s
+    [alwaysrag] 80/144 用时 139s (1.74s/条) 预计总 250s
+    [alwaysrag] 120/144 用时 207s (1.72s/条) 预计总 248s
+  -> D:\桌面\lawgate\results\dev_baseline\alwaysrag_seed0_dev_calib.jsonl
+  acc=0.4792 rr=1.0 lac=1.0 p50=1591.5ms p95=2076.2ms tok=213.4 n=144
+{"enabled": true, "by_kind": {"draft20": {"entries": 337, "tokens": 6661, "seconds": 1787.1}, "draft4": {"entries": 3, "tokens": 12, "seconds": 1.8}, "draft8": {"entries": 4, "tokens": 32, "seconds": 3.5}, "generate": {"entries": 1049, "tokens": 155900, "seconds": 51886834890.9}}, "total_entries": 1393, "total_tokens": 162605, "total_compute_seconds": 51886836683.2}
+[dev-alwaysrag] OK 250s
+[dev-alwaysrag] OK 250s
+
+==============================================================================
+[calibrate] E:\Anaconda\python.exe scripts/calibrate.py --split dev_calib --grid-max 1.0
+==============================================================================
+
+==============================================================================
+[calibrate] E:\Anaconda\python.exe scripts/calibrate.py --split dev_calib --grid-max 1.0
+==============================================================================
+默认（hybrid）τ_b 已写入 configs/thresholds.json: {"b1": 0.29, "b2": 1.0, "b3": 1.0, "b4": 1.0}
+  hybrid      dev_acc=0.4722 dev_rr=0.2431 taus={'b1': 0.29, 'b2': 1.0, 'b3': 1.0, 'b4': 1.0}
+  complexity  dev_acc=0.4722 dev_rr=0.2431 taus={'b1': 0.29, 'b2': 1.0, 'b3': 1.0, 'b4': 1.0}
+  signal      dev_acc=0.4792 dev_rr=0.2153 taus={'b1': 0.03, 'b2': 1.0, 'b3': 1.0, 'b4': 1.0}
+  alwaysrag dev_acc=0.4792  neverrag dev_acc=0.4583
+报告：results/calibrate_report.json
+[calibrate] OK 1s
+[calibrate] OK 1s
+
+==============================================================================
+步骤完成 4/4
+==============================================================================
+  OK   subsets               0.4s 
+  OK   dev-neverrag        224.4s 
+  OK   dev-alwaysrag       250.3s 
+  OK   calibrate             1.0s 

@@ -1,0 +1,47 @@
+{
+  "seed": 42,
+  "dev_calib": {
+    "n": 144,
+    "by_category": {
+      "temporal_trap": 24,
+      "case_verify": 20,
+      "concept": 16,
+      "provision": 20,
+      "case": 16,
+      "multi-turn": 48
+    },
+    "by_bucket": {
+      "b2": 44,
+      "null": 20,
+      "b1": 16,
+      "b3": 16,
+      "b4": 48
+    },
+    "of_dev_total": 236
+  },
+  "test_e1": {
+    "n": 300,
+    "by_category": {
+      "temporal_trap": 96,
+      "case_verify": 80,
+      "multi-turn": 60,
+      "concept": 24,
+      "provision": 24,
+      "case": 16
+    },
+    "by_bucket": {
+      "b2": 120,
+      "null": 80,
+      "b4": 60,
+      "b1": 24,
+      "b3": 16
+    },
+    "of_test_total": 944
+  },
+  "test_e4": {
+    "n": 60,
+    "n_groups": 20
+  },
+  "coverage_note": "test_e1 保留 test 的**全部**时效陷阱（96）与**全部**案号核验（80），多轮按 20 组（60 条）整体入样，概念/法条/案例各分层 24/24/16。故 E1 结论基于 test 的 31.8% 子集（n=300/944），必须随结果披露。",
+  "why": "CPU-only 环境实测：80-token 生成约 7–8 s/条；线程并发无效（4×3 线程比 1×14 慢约 2 倍）。全量 944 条 × 6 方法需 12–13 机时。"
+}

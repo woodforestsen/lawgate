@@ -1,0 +1,65 @@
+# CA-LegalGate 运行配置（可被命令行覆盖）
+# 说明：本机为 CPU-only（无 CUDA），故 device 固定 cpu、load_in_4bit=false。
+# 有 24G 显存时改为：device: cuda:0 / load_in_4bit: true / llm_backend: vllm
+#
+# llm_backend 决定**最终回答模型从哪来**（D30）：
+#   deepseek —— DeepSeek 官方 API（默认；模型 base.yaml 下面 deepseek_model 指定）
+#   hf       —— 本机 transformers 权重（causal_model，即 fuzi-mingcha 6.7B）
+#   vllm     —— 部署路径（本机无 vLLM）
+#   rule     —— 无权重时的抽取式兜底
+#   auto     —— 有 API Key 走 API，否则走本机权重
+# 临时切回本地模型：$env:LAWGATE_LLM_PROVIDER="hf"（或 python 脚本里 get_llm("hf")）
+# 现在改为默认走本地权重 fuzi-mingcha-v1_0（2026-09-13，用户要求）：
+# 回答问题（causal）与门控草稿（draft）都使用同一份本地 6.7B 模型。
+# 代价：CPU 上一栏 192 token 约 2–4 分钟（D29 口径）；想临时切回 DeepSeek API
+# 用 启动服务.ps1 -LlmBackend deepseek（或 $env:LAWGATE_LLM_PROVIDER="deepseek"）。
+llm_backend: hf
+
+# DeepSeek API（密钥只从环境变量/.env 读，**绝不写在这里**——这个文件会提交）
+# 模型名 deepseek-v4-flash：服务端会路由到现行 Flash（实测回报 model=deepseek-flash）。
+# 思考模式由 LAWGATE_LLM_THINKING 控制，默认关：详见 docs/deviations.md D30。
+deepseek_model: deepseek-v4-flash
+
+device: cpu
+load_in_4bit: false
+
+# 最终回答用的大模型（**仅当 llm_backend 走本地时生效**；留空 = 按
+# lawgate/config.py 的 CAUSAL_MODEL_CANDIDATES 自动挑第一个可用目录）
+# 本机已下载 fuzi-mingcha-v1_0（夫子·明察，ChatGLM-6B 底座的司法大模型），故显式钉死。
+# 现在它是"离线/无密钥时的兜底模型"，不再是默认回答模型（D30）。
+causal_model: models/fuzi-mingcha-v1_0
+
+# 权重精度：auto | float16 | float32 | bfloat16
+# 为什么必须给 fuzi-mingcha 显式 float16：
+#   它是 6.7B 参数模型，权重本身存的就是 fp16。
+#   auto 在 CPU 上按老习惯落成 fp32，会先"膨胀"到约 27 GB 内存（本机总内存 31.6 GB），
+#   既慢又容易把机器拖死；float16 只需约 13.4 GB。
+#   显存充足（CUDA）时用 auto 即可（会走 fp16/4bit）。
+dtype: float16
+
+# 门控
+k_draft: 20                # 手册 S3.5 的草稿长度
+signal: margin             # margin | entropy | variance | neglogp（均为"不确定性"，越大越该检索）
+# 门控草稿（u 的信号）从哪来 —— 回答模型换成 API 之后必须显式选（D30）：
+#   local = 只用本机小模型（draft_model，默认 HF 缓存里的 Qwen2.5-0.5B）
+#   api   = 只用回答模型的 API logprobs（思考模式；实测 u 会塌缩到 ≈0，见下）
+#   none  = 不用任何草稿模型，只有确定性复杂度评分
+#   auto  = local → api → 兜底 rule（默认）
+# 为什么默认 local 而不是 api（真机实测，docs/deviations.md D30）：
+#   API 的 logprobs 格式合法，但给的是思考前缀（"我们需要回答用户…"）的分布，
+#   模型在上面极度自信（平均裕度 9–11 nats）→ u = exp(−裕度) ≈ 1e-4，所有问题都贴 0，
+#   门控信号失去区分度；而且会让 TARG 基线（单阈值 τ=0.10）退化成"永不检索"。
+#   本机 0.5B 草稿的 u 实测有量级差异（0.016 / 0.026 / 0.363 / 0.079），故取它作默认。
+draft_source: auto
+
+# 生成
+max_new_tokens: 192        # 手册未固定。演示口径统一 192（= RouterOptions 默认）：
+                           # 左栏无门控直答与右栏律核用**同一个上限**，双栏对照才公平
+                           # （见 docs/deviations.md D28-3）；评测则各脚本显式传 --max-tokens，不受此值影响
+                           # 换成 DeepSeek API 后 192 token ≈ 1–3 s（关思考），
+                           # 不再是 CPU 上的一分钟等待
+
+# 评测
+seeds: [0, 1, 2]
+allow_network: false       # 只约束 HuggingFace 权重下载（本环境对 HF 有中间层劫持）。
+                           # DeepSeek API 调用**不受它控制**：走不走 API 由 llm_backend 决定。

@@ -1,0 +1,106 @@
+{
+  "comparisons": [
+    {
+      "method_a": "neverrag",
+      "method_b": "alwaysrag",
+      "n": 944,
+      "mean_diff": -0.0539,
+      "ci95": [
+        -0.0847,
+        -0.0233
+      ],
+      "p_bootstrap": 0.0004,
+      "p_wilcoxon": 0.0005,
+      "cohens_d": -0.1139,
+      "wilcoxon_note": "",
+      "n_paired": 944
+    },
+    {
+      "method_a": "targ",
+      "method_b": "alwaysrag",
+      "n": 944,
+      "mean_diff": -0.0348,
+      "ci95": [
+        -0.0604,
+        -0.0095
+      ],
+      "p_bootstrap": 0.0088,
+      "p_wilcoxon": 0.00724,
+      "cohens_d": -0.0877,
+      "wilcoxon_note": "",
+      "n_paired": 944
+    },
+    {
+      "method_a": "complexity",
+      "method_b": "alwaysrag",
+      "n": 944,
+      "mean_diff": 0.0086,
+      "ci95": [
+        -0.0021,
+        0.0201
+      ],
+      "p_bootstrap": 0.1436,
+      "p_wilcoxon": 0.13057,
+      "cohens_d": 0.0492,
+      "wilcoxon_note": "",
+      "n_paired": 944
+    },
+    {
+      "method_a": "legal_llm",
+      "method_b": "alwaysrag",
+      "n": 944,
+      "mean_diff": -0.0179,
+      "ci95": [
+        -0.0488,
+        0.0148
+      ],
+      "p_bootstrap": 0.2892,
+      "p_wilcoxon": 0.26127,
+      "cohens_d": -0.0366,
+      "wilcoxon_note": "",
+      "n_paired": 944
+    },
+    {
+      "method_a": "legalgate",
+      "method_b": "alwaysrag",
+      "n": 944,
+      "mean_diff": 0.0594,
+      "ci95": [
+        0.0212,
+        0.0985
+      ],
+      "p_bootstrap": 0.002,
+      "p_wilcoxon": 0.00205,
+      "cohens_d": 0.1008,
+      "wilcoxon_note": "",
+      "n_paired": 944
+    }
+  ],
+  "holm": {
+    "neverrag": {
+      "p": 0.0005,
+      "threshold": 0.01,
+      "reject_h0": true
+    },
+    "legalgate": {
+      "p": 0.00205,
+      "threshold": 0.0125,
+      "reject_h0": true
+    },
+    "targ": {
+      "p": 0.00724,
+      "threshold": 0.016667,
+      "reject_h0": true
+    },
+    "complexity": {
+      "p": 0.13057,
+      "threshold": 0.025,
+      "reject_h0": false
+    },
+    "legal_llm": {
+      "p": 0.26127,
+      "threshold": 0.05,
+      "reject_h0": false
+    }
+  }
+}

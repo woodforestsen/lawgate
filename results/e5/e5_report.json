@@ -1,0 +1,101 @@
+{
+  "tvc_by_trap": {
+    "T1": {
+      "alwaysrag": 0.0,
+      "neverrag": 0.0,
+      "legal_llm": 0.0333,
+      "legalgate": 1.0
+    },
+    "T2": {
+      "alwaysrag": 0.1,
+      "neverrag": 0.2667,
+      "legal_llm": 0.0,
+      "legalgate": 0.8667
+    },
+    "T3": {
+      "alwaysrag": 0.4333,
+      "neverrag": 0.6,
+      "legal_llm": 0.5333,
+      "legalgate": 0.8667
+    },
+    "T4": {
+      "alwaysrag": 0.8667,
+      "neverrag": 0.2,
+      "legal_llm": 0.8,
+      "legalgate": 1.0
+    }
+  },
+  "n_by_trap": {
+    "T1": {
+      "alwaysrag": 30,
+      "neverrag": 30,
+      "legal_llm": 30,
+      "legalgate": 30
+    },
+    "T2": {
+      "alwaysrag": 30,
+      "neverrag": 30,
+      "legal_llm": 30,
+      "legalgate": 30
+    },
+    "T3": {
+      "alwaysrag": 30,
+      "neverrag": 30,
+      "legal_llm": 30,
+      "legalgate": 30
+    },
+    "T4": {
+      "alwaysrag": 30,
+      "neverrag": 30,
+      "legal_llm": 30,
+      "legalgate": 30
+    }
+  },
+  "per_method": {
+    "alwaysrag": {
+      "n": 120,
+      "tvc": 0.35,
+      "invalid_law_citation_rate": 0.6417,
+      "by_trap": {
+        "T1": 0.0,
+        "T2": 0.1,
+        "T3": 0.4333,
+        "T4": 0.8667
+      }
+    },
+    "neverrag": {
+      "n": 120,
+      "tvc": 0.2667,
+      "invalid_law_citation_rate": 0.7167,
+      "by_trap": {
+        "T1": 0.0,
+        "T2": 0.2667,
+        "T3": 0.6,
+        "T4": 0.2
+      }
+    },
+    "legal_llm": {
+      "n": 120,
+      "tvc": 0.3417,
+      "invalid_law_citation_rate": 0.625,
+      "by_trap": {
+        "T1": 0.0333,
+        "T2": 0.0,
+        "T3": 0.5333,
+        "T4": 0.8
+      }
+    },
+    "legalgate": {
+      "n": 120,
+      "tvc": 0.9333,
+      "invalid_law_citation_rate": 0.0333,
+      "by_trap": {
+        "T1": 1.0,
+        "T2": 0.8667,
+        "T3": 0.8667,
+        "T4": 1.0
+      }
+    }
+  },
+  "evidence_scope": "temporal_trap 的 T1–T4 由 law_lifecycle + SUPERSEDE_MAP + validity_status 规则化构造；语料为人工录入的关键条文（PENDING_FLK_VERIFICATION），故 TVC 反映的是『通道 B 的时效状态机 + 生成通道的失效引用行为』，语料本身未经官方原文逐字核对。"
+}

@@ -1,0 +1,28 @@
+==========================================================================
+CA-LegalGate · DeepSeek API 后端自检（D30）
+==========================================================================
+
+== 7. 真机（DeepSeek 官方 API）==
+  目标：https://api.deepseek.com　模型：deepseek-v4-flash
+  [PASS] 真机整段生成成功且非空　0.00s，57 字
+  [PASS] 真机返回中文正文　《民法典》第153条承继并整合了原《合同法》第52条关于合同无效的规定，但已取代
+  答案前 60 字：《民法典》第153条承继并整合了原《合同法》第52条关于合同无效的规定，但已取代后者，自2021年1月1日起适用。
+  用量：{'llm_backend': 'deepseek', 'llm_name': 'deepseek-v4-flash', 'llm_model': 'deepseek-v4-flash', 'llm_api_base': 'https://api.deepseek.com', 'llm_thinking': False, 'llm_key_present': True, 'api_calls': 0, 'api_prompt_tokens': 0, 'api_completion_tokens': 0, 'api_reasoning_tokens': 0, 'api_cached_prompt_tokens': 0, 'api_seconds': 0.0, 'api_errors': 0, 'api_retries': 0}
+  [PASS] 真机流式有分片　8 片，0.00s
+  [PASS] 流式结果与整段结果一致　流式 57 字 / 整段 57 字
+  [PASS] 流式中文未乱码　《民法典》第153条承继并整合了原《合同法》第52条关于合同
+
+  -- 真机 logprobs（门控信号原料）--
+  [PASS] 真机草稿拿到非退化分布　n=8 u(margin)=0.0001 raw_margin=9.159
+  首位置候选：[(-0.0018249777, '我们需要'), (-6.5772376, 'We'), (-9.066948, '需要')]
+  草稿文本前 40 字：'我们需要回答用户中文问题：“什么是诉讼'
+
+  -- 门控来源链实际选择（产品默认顺序）--
+  链路顺序 = ['local', 'api']（draft_source=auto）
+  本次 u 的草稿来源 = local　尝试记录 = [{"source": "local", "ok": true, "seconds": 14.822, "note": "本机草稿模型 E:/ModelCache/huggingface/hub/models--Qwen--Qwen2.5-0.5B-Instruct/snapshots\\7ae557604adf67be50417f59c2c2f167def9a775"}]
+  [PASS] 来源链给出了明确的来源标记　local
+  [PASS] 默认顺序里本机草稿排在 API 之前（D30 实测结论）　['local', 'api']
+
+==========================================================================
+结果：全部通过
+==========================================================================
