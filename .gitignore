@@ -27,14 +27,21 @@ data/kb/gen_cache.db
 data/kb/gen_cache.db-wal
 data/kb/gen_cache.db-shm
 data/kb/chroma/
-results/*/shards/
+results/**/shards/
 results/dev_calib/
 results/pilot/
 results/timing/
+# ---- 备份与归档（本地产物，不入库）----
+results/_prescore_backup/
+results/_archive/
+docs/_archive/
 docs/_*.log
 docs/_*.txt
 docs/_*.err
 docs/pipeline.log
+
+# ---- 工具内部目录（WorkBuddy 工作区、删除备份、个人记忆，不入库）----
+.workbuddy/
 
 # ---- 一次性诊断脚本 / 临时目录（不入库，避免污染仓库）----
 push_via_api.py
