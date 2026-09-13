@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
 <#
     律核 LawGate 演示服务一键启动（Windows PowerShell 5.1 与 PowerShell 7 均可）
 

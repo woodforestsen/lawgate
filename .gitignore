@@ -36,6 +36,12 @@ docs/_*.txt
 docs/_*.err
 docs/pipeline.log
 
+# ---- 一次性诊断脚本 / 临时目录（不入库，避免污染仓库）----
+push_via_api.py
+verify_manifest.py
+_probe_fuzi.py
+docs/_tmp_diff/
+
 # ---- 临时/演示产物（避免与真实结果混淆）----
 results/_demo/
 figures/_demo/
