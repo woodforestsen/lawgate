@@ -1651,6 +1651,76 @@ S3「20/20」、流式「169 片/922 ms」、S0.4「12.36 tok/s」等结论仍�
 
 ---
 
+## D38 回答+草稿模型全换成魔搭 Qwen3-4B（含 Qwen3 思考陷阱修复 + 门控信号塌缩发现）
+
+**用户要求**（2026-09-13，原话"回答和draft模型全换成魔搭社区的Qwen/Qwen3-4B"）：把最终回答模型（causal）与门控草稿（draft）都从旧口径（fuzi-mingcha 6.7B 回答 / 0.5B 草稿）换成魔搭 ModelScope 的 `Qwen/Qwen3-4B`，本地权重落到 `models/Qwen3-4B`，`llm_backend: hf`（本机权重）。fuzi 权重保留在 `models/` 可改回。
+
+**代码/配置改动**（全部落盘且编译/解析自洽）：
+
+| 文件 | 改动 |
+|---|---|
+| `configs/base.yaml` | `causal_model`/`draft_model` = `models/Qwen3-4B`；`dtype: float16`；新增 `local_thinking: false`（**关键修复**） |
+| `lawgate/config.py` | 新增 `local_thinking: bool = False` 字段 + `LAWGATE_LOCAL_THINKING` 解析；`CAUSAL_MODEL_CANDIDATES`/`DRAFT_MODEL_CANDIDATES` 首位改为 `models/Qwen3-4B`；`provenance()` 按生效后端报告 thinking |
+| `lawgate/channel/llm_base.py` | `HFLLM` 新增 `thinking` 参数 + 模板探测（`enable_thinking in tpl` → `_tpl_kwargs`）；`build_prompt` 传 `enable_thinking=False` 并 `TypeError` 回退；`describe()` 报 `llm_thinking`/`llm_thinking_supported`；`get_llm` 的 hf 分支传 `thinking=local_thinking` |
+| `lawgate/channel/draft_source.py` | `_local_factory` 的 `HFLLM` 也传 `thinking=False`（草稿只取前 k token，落在 `<think>` 前缀上信号会失真）；现行本地配置下走 `answer_model` 单源 |
+| `scripts/check_qwen3_e2e.py` | **新建**：现行默认路径真机自检（17 项断言，含思考模式断言） |
+| `scripts/check_draft_u.py` | **新建**：换草稿后 u 分布体检（与 D30 对照表逐字一致） |
+
+另：README / ACCEPTANCE / model_card / system_manual / 功能流程图 / 最小可移植包 / risk_register / DATA_GAP / 小白复现指南 九处文档，把"默认 DeepSeek API / 0.5B 草稿"旧表述全部同步为现行 Qwen3-4B 口径。
+
+**真机验证结果**（2026-09-14 00:13 跑通，权重下载完整落地：三片 safetensors 齐全，分片2 最终 3.71 GB）：
+
+1. `scripts/check_qwen3_e2e.py` → **17/17 PASS**（`docs/check_qwen3_4b.txt`）：
+   - 确实加载 Qwen3-4B（非 fuzi / 0.5B 快照）、走 HF 后端、精度 float16、**思考模式已显式关闭**（`llm_thinking=False`，模板支持=True）；
+   - 加载占用 7.1 GB（< 13 GB，未落成 fp32——dtype 显式 float16 生效）；
+   - 草稿源 = `answer_model`（复用回答模型，未额外加载第二份权重）；
+   - 非流式回答 86 字含中文、后端记录 hf；缓存轮 0.0s vs 首轮 68.5s（缓存生效）；流式 39 片 delta 拼接 == done.answer。
+   - 性能：加载 35.3s（7.1 GB）/ 首轮 68.5s（48 token）/ 流式 95.3s（首字 44.2s）。**CPU 上 192 token 单栏约数分钟**（与旧 fuzi 6.7B 同量级，关思考后正文完整）；快演示仍走 DeepSeek API（1–3 s）。
+
+2. `scripts/check_draft_u.py` → **门控信号 u 塌缩（核心发现）**（`docs/check_draft_u.txt`）：
+   - u(margin) 六题全在 **0.0000–0.0005**（极差 0.0005）；平均裕度（margin）7.5–19.0 nats。
+   - 对照 D30 的 **0.5B 草稿**实测 u = 0.0161 / 0.0263 / 0.3632 / 0.0790——Qwen3-4B 的 u 比它小 **2–3 个数量级**。
+   - 超过 TARG 单阈值 τ=0.10 的样本 **0/6**；现行桶级阈值 τ_b = `{b1:0.29, b2:1.0, b3:1.0, b4:1.0}` 更是全部远在 u 分布之上。
+
+**影响（核心）：是（重大）** —— 门控信号 u 的绝对尺度由草稿模型决定（D11 / D30）。Qwen3-4B（4B）比 0.5B **自信得多**（裕度 7–19 nats vs 0.5B 的约 1–4 nats），于是 `u = exp(-裕度)` 塌缩到 ≈0。**后果：现行 τ_b 与 TARG τ=0.10 全部失效——门控对所有查询都判"足够自信、不检索"（通道 A），律核检索通道（通道 B）实际永不触发**。这正好复刻了 D30 在 DeepSeek API 思考模式下踩到的"u 塌缩"失效，只是这次发生在本机大模型上。
+
+- **结论**：换 Qwen3-4B 后 τ_b **不能默认沿用，而是必须重校准到一个极小的尺度（≈0.0003 量级）** 门控才重新有区分度；否则整套"三通道+一道门"的核心价值（检索降 91%、双栏对照）在现行配置下形同虚设。
+- **推荐决策（待用户定，未擅自改架构）**：
+  - (a) 在 Qwen3-4B 上重跑 E1/E2 重新校准 τ_b 到新尺度——但 u 的有效区分带极窄（0–0.0005），校准脆弱；
+  - (b) **回答模型保留 Qwen3-4B、门控草稿恢复成小模型（0.5B）** 以保留 u 的量级区分度（需改 `draft_source` 让"本地回答模型"也能挂独立小草稿，与 S3.5 "草稿=回答模型" 默认不同）。
+  - **重校准/决策之前，E1/E2 的核心指标（检索降 91%）不可直接引用 Qwen3-4B 口径**，须与历史口径显式区分（同 D33 的"新旧口径禁止并排"纪律）。
+
+**附带修复（与换模型无关，但同款陷阱，必须保留）**：Qwen3 的 chat template 写法 `{%- if enable_thinking is defined and enable_thinking is false %}<think></think>` 等价于"**不传 enable_thinking = 开思考**"，开启后先写一大段 `<think>` reasoning 把 `max_new_tokens=192` 吃光、正文为空。这与 D30 在 DeepSeek API 上踩的是同一款陷阱（那边靠 `thinking=False` 解决），故本机权重也默认 `local_thinking: false`。该修复独立于"草稿换不换"，即使将来把草稿改回 0.5B 也必须保留。
+
+---
+
+## D39
+
+**标题**：Qwen3-4B 口径门控阈值重校准（route A 落地，2026-09-14）
+
+**背景**：D38 暴露 Qwen3-4B 草稿下 u(margin) 塌缩到 0.0000–0.0005，旧 τ_b={0.29/1.0/1.0/1.0}（0.5B 尺度）全部失效。用户在 D38 后选择 **route A（保留 Qwen3-4B 回答+草稿、只重校准阈值，不恢复 0.5B 小草稿）**，并等待 e0_qwen3 全量信号（T6O4J5）产出后给结论。
+
+**重校准结果**（基于 `figures/e0_qwen3/e0_signals_dev.jsonl` 236 条 dev + `need_retrieval` 金标，逐桶 Youden 点网格搜索 τ∈[0,0.1] 步长 0.0001，`scripts/_calibrate_qwen3_from_e0.py`，已写回 `configs/thresholds.json` 与 `results/calibrate_report_qwen3.json`）：
+1. **margin 信号判别力（AUC）**：全量 **0.8964（绿灯）**；分桶 b1=0.9363 / b2=0.9183 / b4=0.8737 均强，b3 标签恒定无定义。这**推翻了 D38 基于 6 题体检外推的"门控失活"判断**——信号本身有强判别力，只是 u 绝对尺度小、旧 τ_b 定高未触发；问题在阈值尺度，不在信号。
+2. **hybrid 默认路由（b2→margin，b1/b3/b4→complexity；与 `router.py` 默认 `signal_buckets=('b2',)` 一致）**：
+   - τ_b = `{b1:0.0, b2:0.0002, b3:0.0, b4:0.0}`
+   - b2(margin) TPR=0.816 / FPR=0.079 ✅；b1(complexity) AUC=0.108 **反判别**→τ=0 退化为恒检索；b4(complexity) AUC=0.82 但取向在 `u>τ→检索` 规则下**反转**→τ=0 退化为恒检索；b3 标签恒定→恒检索
+   - **dev RR=0.8178 → 检索仅降 18.2%**（门控实际只在 b2 起作用）
+3. **signal 模式（全桶 margin，E0 推荐的强判别配置，作为对照）**：
+   - τ_b = `{b1:0.0001, b2:0.0002, b3:0.0, b4:0.0002}`
+   - **dev RR=0.5424 → 检索降 45.8%**
+
+**影响（核心）：是（重大）** —— 旧核心断言"检索降 91%（RR 0.09）"是 **D33 在 0.5B 草稿口径**下的数字，对当前 Qwen3-4B 默认配置**不成立**。README.md / ACCEPTANCE.md / DATA_GAP.md / model_card.md / risk_register.md / 小白复现指南.md 中凡以"91% ✅ PASS / 核心指标成立"呈现该数字的，必须显式标注为 **0.5B 历史口径**，并改为 Qwen3-4B 口径的真实值：**hybrid 18.2% / signal 45.8%**（且须注明这是"信号判别力校准"口径，见下）。未改前，这些材料对"实验结果也是真的吗"的回答是**不准确**的。
+
+**口径红线（延续 D38，强制标注，不可省略）**：
+- 本 τ_b 为**信号判别力校准**（用 `need_retrieval` 构造标签），**非**端到端 correct 校准（后者需 Qwen3-4B 的 neverrag/alwaysrag baseline，CPU 数十小时本机不可行）。
+- `need_retrieval` 标签由**规则化构造**（非人工标注），且 dev 的 `case` 类为**合成文书**（见 `e0_auc.json: dataset_caveat`）；AUC 只反映"信号与构造标签的一致性"，**不等同人工标注下的真实判别力**。
+- 阈值量级 ~1e-4，区分带极窄，对 margin 信号漂移敏感 → **脆弱，非稳健门控**，绝不当成"有效门控"对外报。
+
+**推荐决策（延续 D38 待办，本次 route A 已落地）**：保留 Qwen3-4B 回答+草稿、重校准阈值（已完成）。进一步把 `router.py` 的 `signal_buckets=('b2',)` 扩到 `('b1','b2','b4')`（b3 恒检索），即可让门控在三个桶都有强判别力、检索降 ~46%（等价于 signal 模式 τ_b），属**代码改动**（超出阈值重校准范围），待用户决定。
+
+---
+
 ## 偏差影响汇总
 
 | 编号 | 一句话 | 是否影响核心结论 |
@@ -1687,3 +1757,5 @@ S3「20/20」、流式「169 片/922 ms」、S0.4「12.36 tok/s」等结论仍�
 | D35 | E3 多轮负结果两项：① turn2 acc=0.0 是**代理判分假象**（案号核验追问被按 mt/provision 词面判据打分，通道 B 简洁判定 0/20，golden 自身也不满足判据；**不再修判据**，避免移动球门）；② 槽位继承错误率 1.0——继承机制只认 history 里**经通道 B 确认的 trace 槽位**，离线基准 history 无 trace → 永不触发（对任何方法都不可达成；实时 UI 不受影响）；E1 b4 桶 0.3375 与之互证：多轮是当前最弱一环 | **是**（E3 为负结果；S6.7 槽位继承验收项离线协议下不达成；列为已知局限与未来工作） |
 | D36 | **收尾阶段（纯文档/产物治理）**：① 重跑 `_final_numbers.py` 逐项核验权威数字（结论：实验已由 D33 补完，无缺失产物，剩余缺口全是外部资源类）；② 修掉三处"过时状态回归"——小白复现指南 §10.2 仍写"E1/E2/E3/E5 未跑完，数字不存在"、model_card §6.4 仍写"待生成的实验/阈值占位 0.1/实验用 80 token"、risk_register R9 仍写"未处置、calibrate_report 待生成"且 R21/R23 残留旧事实，并修答辩预问一处数字误引（0.2708→实测 acc 0.4792）；③ 探针与一次性日志归档（`scripts/_archive/2026-09-13_probes/`、`docs/_archive/2026-09-13_logs/`，活跃台账与 `_prescore_backup/` 有意保留）；④ 新增 `docs/最终总结_小白版.md` 并在 README 挂链接；⑤ 新增 **R24**（判分器测量效度 + 多轮离线协议） | **否**（不改代码/配置/结果文件与既成数字；只把"当前状态"类陈述对齐到 D33 之后的事实，历史性陈述原文保留） |
 | D37 | **按用户要求删除全部 smoke 脚本与产物**（`scripts/smoke.py`、`scripts/smoke_stream.py`、`scripts/smoke_s0.py` 与 docs 下 7 个 smoke 产物，2026-09-16）：S3 三通道冒烟 20/20（D26）、流式真机冒烟（D28/D30）、S0.4 吞吐指纹（12.36 tok/s）均为**历史证据**，结论与缺陷记录原文保留在 D26/D28/D30 与本报告；现行可复跑回归改走 `scripts/quickcheck.py` + `scripts/check_stream.py` + `scripts/check_deepseek.py`（`--live`）+ `scripts/check_fuzi_e2e.py` | **否**（纯工具/产物治理：不改任何代码逻辑、配置、结果文件与既成数字；删除的是验收/回归工具，历史结论仍可追溯） |
+| D38 | **回答+草稿模型全换成魔搭 Qwen3-4B**（用户 2026-09-13 要求；真机验证 2026-09-14）：causal/draft 都钉 `models/Qwen3-4B`、`llm_backend: hf`、`dtype: float16`、`local_thinking: false`（修 Qwen3 "不传 enable_thinking=开思考" 陷阱）。`check_qwen3_e2e.py` **17/17 PASS**（加载 7.1 GB float16、思考关、草稿源=answer_model、缓存/流式一致）。**但 `check_draft_u.py` 暴露门控信号塌缩**：u(margin) 六题全在 0.0000–0.0005（极差 0.0005），比 D30 的 0.5B 草稿（0.0161/0.0263/0.3632/0.0790）小 2–3 个数量级；现行 τ_b={0.29/1.0/1.0/1.0} 与 TARG τ=0.10 全部失效，**门控对所有查询都判"不检索"（通道 A），律核检索通道（B）实际永不触发** | **是**（重大：门控失效——不修则核心指标"检索降 91%"在 Qwen3-4B 口径下不成立；τ_b 必须重校准到 ≈0.0003 量级，或恢复小草稿作门控源；重校准/决策前 E1/E2 不可引用 Qwen3-4B 口径） |
+| D39 | **Qwen3-4B 口径门控阈值重校准落地（route A，2026-09-14）**：e0_qwen3 全量 236 条 dev + need_retrieval 金标逐桶 Youden 校准。margin AUC=0.8964（绿灯，推翻 D38"门控失活"外推）。写回 `configs/thresholds.json`：hybrid 默认 τ_b={b1:0.0,b2:0.0002,b3:0.0,b4:0.0} → dev RR=0.8178（**检索降 18.2%**，b1/b4 复杂度门控退化为恒检索）；signal 模式（全桶 margin）τ_b={b1:0.0001,b2:0.0002,b3:0.0,b4:0.0002} → dev RR=0.5424（**检索降 45.8%**）。旧"检索降 91%"为 0.5B 历史口径、对 Qwen3-4B 不成立 | **是**（重大：核心指标数字须随草稿口径改写；"91%"不得再作为 Qwen3-4B 口径结论，须标 0.5B 历史口径并改 18.2%/45.8%；且本校准为信号判别力口径、非端到端 correct，标签构造+case 合成，阈值 ~1e-4 脆弱） |

@@ -1,0 +1,194 @@
+{
+  "generated": "2026-09-13",
+  "data": [
+    {
+      "law_short": "合同法",
+      "ok": true,
+      "law_name": "中华人民共和国合同法",
+      "source": "中国人大网（官方全文页）",
+      "source_level": "A（中国人大网官方全文页）",
+      "url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992739.htm",
+      "expect_articles": 428,
+      "got_articles": 428,
+      "lines": 459,
+      "bytes": 99324,
+      "file": "data\\raw\\合同法.txt",
+      "retrieval_date": "2026-09-13",
+      "dry_run": false,
+      "attempts": [
+        {
+          "source": "中国人大网（官方全文页）",
+          "url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992739.htm",
+          "level": "A（中国人大网官方全文页）",
+          "ok": true,
+          "n_rows": 428,
+          "n_unique": 428,
+          "max": 428,
+          "gaps": []
+        }
+      ]
+    },
+    {
+      "law_short": "物权法",
+      "ok": true,
+      "law_name": "中华人民共和国物权法",
+      "source": "中国人大网（官方全文页）",
+      "source_level": "A（中国人大网官方全文页）",
+      "url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992736.htm",
+      "expect_articles": 247,
+      "got_articles": 247,
+      "lines": 304,
+      "bytes": 58469,
+      "file": "data\\raw\\物权法.txt",
+      "retrieval_date": "2026-09-13",
+      "dry_run": false,
+      "attempts": [
+        {
+          "source": "中国人大网（官方全文页）",
+          "url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992736.htm",
+          "level": "A（中国人大网官方全文页）",
+          "ok": true,
+          "n_rows": 247,
+          "n_unique": 247,
+          "max": 247,
+          "gaps": []
+        }
+      ]
+    },
+    {
+      "law_short": "侵权责任法",
+      "ok": true,
+      "law_name": "中华人民共和国侵权责任法",
+      "source": "中国人大网（官方全文页）",
+      "source_level": "A（中国人大网官方全文页）",
+      "url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992753.htm",
+      "expect_articles": 92,
+      "got_articles": 92,
+      "lines": 104,
+      "bytes": 20865,
+      "file": "data\\raw\\侵权责任法.txt",
+      "retrieval_date": "2026-09-13",
+      "dry_run": false,
+      "attempts": [
+        {
+          "source": "中国人大网（官方全文页）",
+          "url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992753.htm",
+          "level": "A（中国人大网官方全文页）",
+          "ok": true,
+          "n_rows": 92,
+          "n_unique": 92,
+          "max": 92,
+          "gaps": []
+        }
+      ]
+    },
+    {
+      "law_short": "婚姻法",
+      "ok": true,
+      "law_name": "中华人民共和国婚姻法",
+      "source": "中国人大网（官方全文页）",
+      "source_level": "A（中国人大网官方全文页）",
+      "url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992746.htm",
+      "expect_articles": 51,
+      "got_articles": 51,
+      "lines": 57,
+      "bytes": 12452,
+      "file": "data\\raw\\婚姻法.txt",
+      "retrieval_date": "2026-09-13",
+      "dry_run": false,
+      "attempts": [
+        {
+          "source": "中国人大网（官方全文页）",
+          "url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992746.htm",
+          "level": "A（中国人大网官方全文页）",
+          "ok": true,
+          "n_rows": 51,
+          "n_unique": 51,
+          "max": 51,
+          "gaps": []
+        }
+      ]
+    },
+    {
+      "law_short": "继承法",
+      "ok": true,
+      "law_name": "中华人民共和国继承法",
+      "source": "中国人大网（官方全文页）",
+      "source_level": "A（中国人大网官方全文页）",
+      "url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992749.htm",
+      "expect_articles": 37,
+      "got_articles": 37,
+      "lines": 42,
+      "bytes": 9321,
+      "file": "data\\raw\\继承法.txt",
+      "retrieval_date": "2026-09-13",
+      "dry_run": false,
+      "attempts": [
+        {
+          "source": "中国人大网（官方全文页）",
+          "url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992749.htm",
+          "level": "A（中国人大网官方全文页）",
+          "ok": true,
+          "n_rows": 37,
+          "n_unique": 37,
+          "max": 37,
+          "gaps": []
+        }
+      ]
+    },
+    {
+      "law_short": "收养法",
+      "ok": true,
+      "law_name": "中华人民共和国收养法",
+      "source": "中国人大网（官方全文页）",
+      "source_level": "A（中国人大网官方全文页）",
+      "url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992751.htm",
+      "expect_articles": 34,
+      "got_articles": 34,
+      "lines": 40,
+      "bytes": 7600,
+      "file": "data\\raw\\收养法.txt",
+      "retrieval_date": "2026-09-13",
+      "dry_run": false,
+      "attempts": [
+        {
+          "source": "中国人大网（官方全文页）",
+          "url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992751.htm",
+          "level": "A（中国人大网官方全文页）",
+          "ok": true,
+          "n_rows": 34,
+          "n_unique": 34,
+          "max": 34,
+          "gaps": []
+        }
+      ]
+    },
+    {
+      "law_short": "担保法",
+      "ok": true,
+      "law_name": "中华人民共和国担保法",
+      "source": "中国人大网（官方全文页）",
+      "source_level": "A（中国人大网官方全文页）",
+      "url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992740.htm",
+      "expect_articles": 96,
+      "got_articles": 96,
+      "lines": 113,
+      "bytes": 23998,
+      "file": "data\\raw\\担保法.txt",
+      "retrieval_date": "2026-09-13",
+      "dry_run": false,
+      "attempts": [
+        {
+          "source": "中国人大网（官方全文页）",
+          "url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992740.htm",
+          "level": "A（中国人大网官方全文页）",
+          "ok": true,
+          "n_rows": 96,
+          "n_unique": 96,
+          "max": 96,
+          "gaps": []
+        }
+      ]
+    }
+  ]
+}

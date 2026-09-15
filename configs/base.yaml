@@ -3,16 +3,16 @@
 # 有 24G 显存时改为：device: cuda:0 / load_in_4bit: true / llm_backend: vllm
 #
 # llm_backend 决定**最终回答模型从哪来**（D30）：
-#   deepseek —— DeepSeek 官方 API（默认；模型 base.yaml 下面 deepseek_model 指定）
-#   hf       —— 本机 transformers 权重（causal_model，即 fuzi-mingcha 6.7B）
+#   deepseek —— DeepSeek 官方 API（模型由下面 deepseek_model 指定）
+#   hf       —— 本机 transformers 权重（causal_model，现为 Qwen3-4B）
 #   vllm     —— 部署路径（本机无 vLLM）
 #   rule     —— 无权重时的抽取式兜底
 #   auto     —— 有 API Key 走 API，否则走本机权重
-# 临时切回本地模型：$env:LAWGATE_LLM_PROVIDER="hf"（或 python 脚本里 get_llm("hf")）
-# 现在改为默认走本地权重 fuzi-mingcha-v1_0（2026-09-13，用户要求）：
-# 回答问题（causal）与门控草稿（draft）都使用同一份本地 6.7B 模型。
-# 代价：CPU 上一栏 192 token 约 2–4 分钟（D29 口径）；想临时切回 DeepSeek API
-# 用 启动服务.ps1 -LlmBackend deepseek（或 $env:LAWGATE_LLM_PROVIDER="deepseek"）。
+# 默认走本机权重 **models/Qwen3-4B**（2026-09-13 用户要求，见 docs/deviations.md D38）：
+# 回答问题（causal）与门控草稿（draft）用的是**同一份 Qwen3-4B**——这正是手册 S3.5
+# 的原设计（草稿与正式生成共享同一模型与前缀，prefill 成本不翻倍）。
+# 临时切回 DeepSeek API：启动服务.ps1 -LlmBackend deepseek
+# （或 $env:LAWGATE_LLM_PROVIDER="deepseek"）。
 llm_backend: hf
 
 # DeepSeek API（密钥只从环境变量/.env 读，**绝不写在这里**——这个文件会提交）
@@ -25,31 +25,58 @@ load_in_4bit: false
 
 # 最终回答用的大模型（**仅当 llm_backend 走本地时生效**；留空 = 按
 # lawgate/config.py 的 CAUSAL_MODEL_CANDIDATES 自动挑第一个可用目录）
-# 本机已下载 fuzi-mingcha-v1_0（夫子·明察，ChatGLM-6B 底座的司法大模型），故显式钉死。
-# 现在它是"离线/无密钥时的兜底模型"，不再是默认回答模型（D30）。
-causal_model: models/fuzi-mingcha-v1_0
+# 本机已从**魔搭 ModelScope** 下载 Qwen/Qwen3-4B 到 models/Qwen3-4B，故显式钉死。
+# 它替掉了此前的 fuzi-mingcha-v1_0（夫子·明察 6.7B，D29）：换模型的原因、代价与
+# 口径影响见 docs/deviations.md D38。fuzi 权重仍留在 models/ 里，改回它只需把
+# 本行写回 models/fuzi-mingcha-v1_0（下载方式：scripts/download_modelscope.py）。
+causal_model: models/Qwen3-4B
+
+# 门控草稿模型（取前 k 个 token 的 logprob 分布，不生成答案）。
+# 注意一条容易误解的机制：**回答模型是本地权重时，草稿直接复用回答模型本身**
+# （lawgate/channel/draft_source.py 的 answer_model 来源链，手册 S3.5 原设计——
+# 共享同一模型与前缀，prefill 不翻倍）。所以这里与 causal_model 写同一个路径，
+# 作用是：① 让 /health、图注、页脚如实显示草稿是谁；② 万一把回答切成 DeepSeek
+# API，本地兜底草稿也仍是 Qwen3-4B，不会再回落到 HF 缓存里的 Qwen2.5-0.5B。
+draft_model: models/Qwen3-4B
 
 # 权重精度：auto | float16 | float32 | bfloat16
-# 为什么必须给 fuzi-mingcha 显式 float16：
-#   它是 6.7B 参数模型，权重本身存的就是 fp16。
-#   auto 在 CPU 上按老习惯落成 fp32，会先"膨胀"到约 27 GB 内存（本机总内存 31.6 GB），
-#   既慢又容易把机器拖死；float16 只需约 13.4 GB。
+# 为什么显式 float16（对 Qwen3-4B 同样适用）：
+#   auto 在 CPU 上按老习惯落成 fp32，会先把内存"膨胀"一倍：
+#   Qwen3-4B 约 40 亿参数 → fp32 ≈ 16 GB（本机总内存 31.6 GB），既慢又容易把机器拖死；
+#   float16 只需约 8 GB。
+#   （fuzi-mingcha 6.7B 时代这条更极端：fp32 ≈ 27 GB vs fp16 ≈ 13.4 GB，见 D-fuzi-5。）
 #   显存充足（CUDA）时用 auto 即可（会走 fp16/4bit）。
 dtype: float16
+
+# 本机权重的"思考模式"（D38）：false（默认，关思考）| true
+# ⚠ 这一行**必须显式存在且为 false**，原因是 Qwen3 的 chat template 写法特殊：
+#     {%- if enable_thinking is defined and enable_thinking is false %}<think></think>
+#   即"不传 enable_thinking = 开启思考"。开着思考时模型会先写一大段 <think>…</think>，
+#   max_new_tokens=192 很可能被 reasoning 吃光 → 正文为空或截断。
+#   这与 D30 在 DeepSeek API 上踩到的是同一款陷阱（那边靠 thinking=False 解决）。
+#   环境变量 LAWGATE_LOCAL_THINKING=1 可临时打开（仅当模型模板支持该开关时生效）。
+local_thinking: false
 
 # 门控
 k_draft: 20                # 手册 S3.5 的草稿长度
 signal: margin             # margin | entropy | variance | neglogp（均为"不确定性"，越大越该检索）
-# 门控草稿（u 的信号）从哪来 —— 回答模型换成 API 之后必须显式选（D30）：
-#   local = 只用本机小模型（draft_model，默认 HF 缓存里的 Qwen2.5-0.5B）
+# 门控草稿（u 的信号）从哪来 —— 回答模型走本地还是 API，决定了这条要不要显式选（D30）：
+#   local = 只用本机草稿模型（draft_model，现为 models/Qwen3-4B）
 #   api   = 只用回答模型的 API logprobs（思考模式；实测 u 会塌缩到 ≈0，见下）
 #   none  = 不用任何草稿模型，只有确定性复杂度评分
 #   auto  = local → api → 兜底 rule（默认）
+# ⚠ 现行配置下（回答模型 = 本机 Qwen3-4B）这个开关基本不参与决策：
+#   draft_source.build_draft_source() 见到"回答模型不是 API"就直接把草稿接到
+#   **回答模型本身**（来源名 answer_model），这正是手册 S3.5 的原设计。
+#   下面这整段历史只在"回答模型切成 DeepSeek API"时才有意义。
 # 为什么默认 local 而不是 api（真机实测，docs/deviations.md D30）：
 #   API 的 logprobs 格式合法，但给的是思考前缀（"我们需要回答用户…"）的分布，
 #   模型在上面极度自信（平均裕度 9–11 nats）→ u = exp(−裕度) ≈ 1e-4，所有问题都贴 0，
 #   门控信号失去区分度；而且会让 TARG 基线（单阈值 τ=0.10）退化成"永不检索"。
 #   本机 0.5B 草稿的 u 实测有量级差异（0.016 / 0.026 / 0.363 / 0.079），故取它作默认。
+# ⚠ 上面那组 u 是**0.5B 草稿**的实测值。草稿换成 Qwen3-4B 后 u 的绝对尺度必然变
+#   （模型更大、更自信），configs/thresholds.json 的 τ_b 与 TARG 的 τ=0.10 都**不能
+#   默认沿用**，重跑 E1/E2 前必须先看一遍新 u 的分布（见 docs/deviations.md D38）。
 draft_source: auto
 
 # 生成

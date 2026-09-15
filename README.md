@@ -4,12 +4,14 @@
 > 门控式直接生成 + 门控式语义检索"三条异构通道，在**不牺牲准确率**的前提下把检索调用
 > 压下来，并把每一次路由决策、每一条法条来源、每一个案号核验结论都写进可审计的 `trace`。
 >
-> **"不牺牲准确率"的证据状态（2026-09-12，D33/D34）**：E1 主对比在 **test 全量 944 条**
+> **"不牺牲准确率"的证据状态（2026-09-12，D33/D34；口径为当时时点）**：E1 主对比在 **test 全量 944 条**
 > （回答=DeepSeek API `deepseek-v4-flash`、门控草稿=本机 Qwen2.5-0.5B、192 tokens、机械代理判分）上，
 > 本系统 acc **0.6144** vs Always-RAG **0.5551**（配对 Wilcoxon p=0.00205，Holm 校正后显著**更优**），
 > 同时检索调用率 **0.09**（降 91%）——核心断言 **PASS**（`results/e1/core_assertion.json`）。
 > 该表述曾在 D32-1 因旧口径证据（1.5B/tok80/dev_calib 工作点）被**禁用**，现按新口径全量证据恢复；
 > 引用时必须带口径三件套，且不得与 `results/_archive/2026-09-11_qwen1.5b_tok80/` 的旧数字并排。
+> ⚠️ **上面这批数字是"API 回答 + 0.5B 草稿"口径**（2026-09-12 时点）；**现行默认模型已改为本机
+> `models/Qwen3-4B`（2026-09-13，D38）**，两者不可混引——现行配置见 §0 状态表与 §1.4。
 
 ---
 
@@ -19,8 +21,8 @@
 |---|---|---|
 | 可运行系统（路由 + 三通道 + 前端） | ✅ 可运行（历史：2026-09-11 端到端冒烟 20/20，脚本与报告已于 2026-09-16 删除，见 D37） | `lawgate/router.py`、`lawgate/api/ui.py`；组件级自检 `docs/quickcheck.txt`（意图 6/6、核验 6/6） |
 | 全部实验与验收脚本（E0–E6 / 消融 / 校准 / 出图 / 冒烟） | ✅ 已实现，可运行 | `scripts/` 共 **30** 个可复现脚本（口径 = 名字不以 `_` 开头的 `.py`），清单见 §3；一次性探针已归档进 `scripts/_archive/2026-09-13_probes/` |
-| 知识库（法条 + 案号 + 沿革 + 词典） | ⚠️ 可运行但**非官方原文** | 158 行 / 95 条，全部 `MANUAL_TRANSCRIPT` + `PENDING_FLK_VERIFICATION`；案号库 600 条全部 `SYNTHETIC` |
-| 向量库 | ✅ 已构建 | `data/kb/vector_build.json`：1295 文档、512 维、chromadb、37.8 s |
+| 知识库（法条 + 案号 + 沿革 + 词典） | ✅ 已用**真实来源**补齐 | 法条：**188 部法律 / 18281 行 / 16046 条去重**（民法典全量 1260 条；现行有效 16748 / 已废止 985 / 已修订 548）——主体 175 部来自开源数据集 **Chinese-Laws-folk**（`source_db=CLF`，`ingest_provenance` 标 `CLF_DATASET/UNVERIFIED`），另 13 部（含 7 部已废止法）来自中国人大网官方页 + laws-data 数据集（`VERIFIED`）；**溯源覆盖 188/188 部**；案号库：**1610 条真实裁判文书**（`data_source=CJWS`），0 条 `SYNTHETIC` |
+| 向量库 | ✅ **已按真实数据重建（2026-09-14）** | `data/kb/vector_build.json`：**42057 文档**（法条 16352 + 文书分块 25705，来自 1610 篇真实文书）、512 维、`bge-small-zh-v1.5`、NumpyStore、1185 s |
 | 评测集（1180 条） | ✅ 已构建并通过自校验 | `data/benchmark/verify_report.md` 结论 **PASS** |
 | E0 门控信号诊断 | ⚠️ 已完成，但**信号采集在 0.5B 上**（D21） | `figures/e0/e0_auc.json`（**红灯 → 已按桶改混合路由**）；1.5B 复测：`--tag 15b` 分片顺序跑 `--split dev` + `--merge` + `--analyse-only`，`--tag 15b_calib` 单次跑 `--split dev_calib`（**D22**：`--split` 只收单值，两 split 分目录避免互覆 `e0_auc.json`） |
 | E6 案号核验 | ✅ 已完成 | `results/e6/prf.json`、`results/e6/confusion.json` |
@@ -28,13 +30,13 @@
 | 三通道端到端冒烟（S3） | ⚰️ 历史 20/20（2026-09-11）；脚本与产物已于 2026-09-16 删除（用户要求，见 D37），现以 `docs/quickcheck.txt` 为可复跑自检 | `scripts/smoke.py` 曾 20/20 走真实 `POST /chat`（首轮 14/20，6 组失败定位到 **D26** 四个缺陷，已修复复测 20/20）。删除后 S3 回归改跑 `scripts/quickcheck.py` + `scripts/check_stream.py` |
 | 桶级阈值校准 | ✅ **已完成并按新口径重校准（2026-09-12，D33-3）** | `configs/thresholds.json`：b1 0.29 / b2 1.0 / b3 1.0 / **b4 1.0**（`dev_calib` 144 条、新口径 dev 基线重跑后校准、`largest_feasible`、`grid_max=1.0`，见 `results/calibrate_report.json`；b1 仍 `feasible:false` → 0.29 为兜底值，D13 口径披露；D30 的"τ_b 未重校准"警告**解除**） |
 | 人工标注 / 真实标注者 κ | ❌ **未做**（本环境无标注员） | 所有标签为规则化生成；`kappa_report.md` 的 κ 来自**模拟**标注员，**不得**当作一致性证据 |
-| 真实裁判文书（裁判文书网） | ❌ **未做** | 网络中间层劫持，且合成库无法测"假阴性" |
-| FLK 官方法律原文 | ❌ **未做** | 见 `docs/DATA_GAP.md` |
-| 最终回答模型 | ✅ **DeepSeek 官方 API 的 `deepseek-v4-flash`**（默认，关思考，单条 192 token 约 **1–3 s**，缓存命中 ≈0.05 s） | `configs/base.yaml: llm_backend: deepseek` / `deepseek_model`；密钥在仓库根 **`.env` 的 `DEEPSEEK_API_KEY`**（不提交，已 `.gitignore`）；真机自检 `scripts/check_deepseek.py --live`（D30） |
-| 门控草稿来源 | ✅ **本机 Qwen2.5-0.5B**（默认；API 草稿的 u 实测塌缩到 ≈0，不可用作默认） | `configs/base.yaml: draft_source: auto`；来源与每次尝试写进 `trace.draft_source` / `draft_attempts`；对照实测见 `docs/check_deepseek_gate.txt`（D30） |
-| GPU / 7B 模型 | ❌ **无 GPU；权重规模已不是瓶颈** | 本机无 CUDA。历史口径：0.5B（HF 缓存）→ 1.5B（D21）→ 6.7B 本地 `models/fuzi-mingcha-v1_0`（D29）；**现在 6.7B 只作离线兜底**，默认由 DeepSeek API 回答（D30）。⚠️ 早期 pilot/timing/E0 信号为 0.5B、E1 为 1.5B 产物，口径不同，引用必须区分 |
+| 真实裁判文书 | ✅ **已完成（2026-09-13）** | 1610 条真实文书（ModelScope `qazwsxplkj/cn-judgment-docs`，4 类案由各 500 / 离婚 110），`data_source=CJWS`；见 `docs/DATA_GAP.md` G2 |
+| FLK 官方法律原文 | ✅ **已完成（2026-09-13）** | 7 部已废止法来自中国人大网、6 部现行法来自 laws-data 数据集，全部 `VERIFIED`；见 `docs/DATA_GAP.md` G1 |
+| 最终回答模型 | ✅ **本机权重 `models/Qwen3-4B`**（**魔搭社区的 `Qwen/Qwen3-4B`**，fp16/CPU，**2026-09-13 起为默认**，见 D38）；要更快可 `-LlmBackend deepseek` 切回 API | `configs/base.yaml: llm_backend: hf` + `causal_model: models/Qwen3-4B`；权重用 `scripts/download_modelscope.py` 从**魔搭**拉取（本机 HF 不可达，D0）；秒级确认 `scripts/check_backend.py`；真机自检 `docs/check_qwen3_4b.txt` |
+| 门控草稿来源 | ✅ **与回答模型同一份权重 `models/Qwen3-4B`**（手册 S3.5 原设计：草稿与正式生成共享同一模型与前缀，prefill 不翻倍；`build_draft_source` 的 `answer_model` 来源，见 D38） | `configs/base.yaml: draft_model: models/Qwen3-4B`、`draft_source: auto`；每次实际来源写进 `trace.draft_source` / `draft_attempts`。⚠ D30 那组 0.5B 草稿的 u 实测值**不再代表现行尺度** |
+| GPU / 7B 模型 | ❌ **无 GPU；权重规模已不是瓶颈** | 本机无 CUDA。回答模型历史口径：0.5B（HF 缓存，D9）→ 1.5B（D21）→ 6.7B `models/fuzi-mingcha-v1_0`（D29）→ **4B `models/Qwen3-4B`（D38，现行默认）**。⚠ 早期 pilot/timing/E0 信号是 0.5B、E1 是 1.5B、E1–E5 主结果是"回答走 API + 0.5B 草稿"口径，**与现行配置全都不同**，引用必须区分 |
 
-> 逐条偏差记录（**D0–D36**）见 **`docs/deviations.md`**；验收判定见 **`docs/ACCEPTANCE.md`**（已生成，反映当前真实状态）；
+> 逐条偏差记录（**D0–D38**）见 **`docs/deviations.md`**；验收判定见 **`docs/ACCEPTANCE.md`**（已生成，反映当前真实状态）；
 > 零基础收尾总结见 **`docs/最终总结_小白版.md`**（大白话版结论、验收对照、诚实清单、5 分钟自查）。
 > **申报/论文相关**：可行性判断与路线见 **`docs/大创与论文可行性评估.md`**（含大创立项、论文分档、"效力盲 + 检索冗余"新卖点、答辩十问与口径修正清单），
 > 申报书填空模板见 **`docs/大创申报书骨架.md`**。两份文档是 2026-09 对照真实产物（`results/`、`counts.json`）核对后的判断，**引用数字时以它们列为依据的文件为准**。
@@ -128,11 +130,12 @@ E:\Anaconda\python.exe scripts\check_deepseek.py --skip-offline --live --with-lo
 | `DEEPSEEK_BASE_URL` | API 地址 | `https://api.deepseek.com` |
 | `DEEPSEEK_MODEL` | 回答模型名（`configs/base.yaml: deepseek_model` 是同一个值的非密配置） | `deepseek-v4-flash` |
 | `LAWGATE_LLM_PROVIDER` | 服务形态：`deepseek` / `hf` / `rule`（覆盖 `base.yaml: llm_backend`） | 按 `llm_backend` |
-| `LAWGATE_LLM_THINKING` | 思考模式：留空/`0`=关（默认，快且正文非空）；设 `1`=开 | 关 |
+| `LAWGATE_LLM_THINKING` | 思考模式（**仅 API 回答时**）：留空/`0`=关（默认，快且正文非空）；设 `1`=开 | 关 |
+| `LAWGATE_LOCAL_THINKING` | 思考模式（**仅本机权重时**）：留空/`0`=关（默认）；设 `1`=开。⚠ Qwen3 模板**不传这个开关就等于开思考**，会把 `max_tokens` 吃在 `<think>` 推理上，故必须显式关（D38） | 关 |
 | `LAWGATE_LLM_TIMEOUT` | 单次请求超时（秒） | `120` |
 | `LAWGATE_LLM_RETRIES` | 失败重试次数（429/5xx/超时才重试） | `3` |
-| `LAWGATE_DRAFT_SOURCE` | 门控草稿来源：`auto`（local→api→rule）/ `local` / `api` / `none` | `auto` |
-| `LAWGATE_DRAFT_MODEL` | 草稿模型路径；设 `none` = 不加载任何本地草稿模型 | 自动挑 Qwen2.5-0.5B |
+| `LAWGATE_DRAFT_SOURCE` | 门控草稿来源：`auto`（local→api→rule；回答走本地时该开关不参与决策，草稿=回答模型本身）/ `local` / `api` / `none` | `auto` |
+| `LAWGATE_DRAFT_MODEL` | 草稿模型路径；设 `none` = 不加载任何本地草稿模型 | 自动挑 `models/Qwen3-4B`（D38；仅"回答切 API"时才真正加载） |
 | `LAWGATE_DOTENV` | 设 `0` = **完全不读 `.env`**（用于复现"没有密钥时的降级行为"） | `1` |
 | `LAWGATE_MODEL` / `LAWGATE_EMBED` / `LAWGATE_DTYPE` | 本地兜底回答模型 / 向量模型 / 精度 | 按 `base.yaml` |
 
@@ -177,35 +180,45 @@ curl.exe -N -X POST http://127.0.0.1:8010/chat/stream `
 powershell -ExecutionPolicy Bypass -File .\启动服务.ps1 -NoApi
 # 换 API 端口（默认 8010）
 powershell -ExecutionPolicy Bypass -File .\启动服务.ps1 -ApiPort 8020
-# 离线演示：临时切回本机 fuzi-mingcha 权重（不走 DeepSeek API）
-powershell -ExecutionPolicy Bypass -File .\启动服务.ps1 -LlmBackend hf
+# 默认就是本机权重 models/Qwen3-4B（离线、无需密钥，见 D38）
+powershell -ExecutionPolicy Bypass -File .\启动服务.ps1
+# 想更快可切到 DeepSeek 官方 API（1–3 s 出答案；需要 .env 里的 DEEPSEEK_API_KEY）
+powershell -ExecutionPolicy Bypass -File .\启动服务.ps1 -LlmBackend deepseek
 ```
 
-### 默认回答模型与"切回本地"（D30）
+### 默认回答模型与"切到 API"（**D38** / D30）
 
-| 项 | 默认（当前配置） | 切回本机权重 |
+2026-09-13 起，默认回答模型**回到本机权重**，并换成**魔搭社区的 `Qwen/Qwen3-4B`**（D38）。
+历史轨迹：0.5B（D9）→ 1.5B（D21）→ 6.7B `fuzi-mingcha-v1_0`（D29）→ DeepSeek API（D30）
+→ **4B `models/Qwen3-4B`（D38，现行）**。
+
+| 项 | **默认（当前配置）** | 切到 DeepSeek API |
 |---|---|---|
-| 服务形态 | **DeepSeek 官方 API**（`configs/base.yaml: llm_backend: deepseek`） | `启动服务.ps1 -LlmBackend hf`，或 `$env:LAWGATE_LLM_PROVIDER="hf"` |
-| 模型 | **`deepseek-v4-flash`**（服务端回报 `model=deepseek-flash`），地址 `https://api.deepseek.com` | `models/fuzi-mingcha-v1_0`（夫子·明察 6.7B，fp16/CPU） |
-| 密钥 | 仓库根 **`.env` 的 `DEEPSEEK_API_KEY`**（不提交，`.gitignore` 已排除；`/health`、`check_backend.py` 只报"有没有"） | 不需要密钥 |
-| 单条 192 token | 约 **1–3 s**；命中内容缓存（`data/kb/gen_cache.db`）≈ **0.05 s** | 约 **2–4 分钟**（约 1 token/s） |
-| 联网 | **必须**（每问一次 HTTPS；缓存命中则 0 请求） | 完全离线 |
-| 思考模式 | 默认**关**（`LAWGATE_LLM_THINKING`，默认空=关） | 不适用 |
+| 服务形态 | **本机权重**（`configs/base.yaml: llm_backend: hf`） | `启动服务.ps1 -LlmBackend deepseek`，或 `$env:LAWGATE_LLM_PROVIDER="deepseek"` |
+| 模型 | **`models/Qwen3-4B`**（= 魔搭 `Qwen/Qwen3-4B`，约 40 亿参数，fp16/CPU） | `deepseek-v4-flash`（服务端回报 `model=deepseek-flash`），地址 `https://api.deepseek.com` |
+| 密钥 | 不需要 | 仓库根 **`.env` 的 `DEEPSEEK_API_KEY`**（不提交，`.gitignore` 已排除；`/health`、`check_backend.py` 只报"有没有"） |
+| 门控草稿 | **与回答模型同一份权重**（手册 S3.5：共享模型与前缀，prefill 不翻倍） | 本机 `models/Qwen3-4B`（**不再回落到 0.5B**）；API 自身的 logprobs 不可用作默认，见下 |
+| 单条 192 token | CPU fp16，数十秒量级；命中内容缓存（`data/kb/gen_cache.db`）≈ **0.1 s** | 约 **1–3 s**；缓存命中 ≈ **0.05 s** |
+| 联网 | 完全离线 | **必须**（每问一次 HTTPS；缓存命中则 0 请求） |
+| 思考模式 | 不适用 | 默认**关**（`LAWGATE_LLM_THINKING`，默认空=关） |
 
-> ⚠️ 思考模式**开着**时，模型会先生成一大段 reasoning；`max_tokens` 小时正文会是**空字符串**
-> （实测 `max_tokens=32` 时 content 为空、600 token 全被 reasoning 吃掉）——这是实测踩过的坑，
+> ⚠️（**仅 API 模式**）思考模式**开着**时，模型会先生成一大段 reasoning；`max_tokens` 小时正文会是
+> **空字符串**（实测 `max_tokens=32` 时 content 为空、600 token 全被 reasoning 吃掉）——
 > 所以答案默认关思考（`{"thinking": {"type": "disabled"}}`）。
 > 门控草稿会**单独**强制走思考模式取 logprobs（不这样就取不到真实分布），见 `docs/deviations.md` D30-1。
 
-**为什么 API 模式下首次提问仍然要等**：回答本身只要 1 s 左右，但那之前要先取一次**门控草稿**，
-而草稿默认来自**本机 Qwen2.5-0.5B**（约 1.5–3 s，实测 3.3 s 里 2.4 s 是草稿）。
-想更快可以把 `k_draft` 从 20 降到 8（信号聚合只用前 8 位，**u 不变**），草稿耗时约砍半。
-
 **为什么草稿不用 API 自己的 logprobs**：实测 API 的 logprobs 格式合法，但拿到的是
 **套路化推理前缀**的分布（平均裕度 9–11 nats），算出的 u 全挤在 **0.0000–0.0012**，
-失去区分度；本机 0.5B 草稿的 u 有量级差异（0.016 / 0.026 / **0.363** / 0.079）。
-所以默认链是 **本机 0.5B → API → 确定性伪分布**，每次换源都写进
+失去区分度；当年本机 0.5B 草稿的 u 有量级差异（0.016 / 0.026 / **0.363** / 0.079）。
+所以 **API 模式下**的来源链是 **本机草稿模型 → API → 确定性伪分布**，每次换源都写进
 `trace.draft_source` / `draft_attempts`（见 D30-2）。
+API 模式下首字延迟主要花在取草稿上，想更快可把 `k_draft` 从 20 降到 8
+（信号聚合只用前 8 位，**u 不变**）。
+
+> ⚠️ 上面那组 u 是 **0.5B 草稿**的实测值。草稿换成 `Qwen3-4B` 后 u 的绝对尺度必然变
+> （模型更大、在同样的前缀上会更自信），`configs/thresholds.json` 的 τ_b
+> （0.29 / 1.0 / 1.0 / 1.0）与 TARG 的手册 τ=0.10 **都不能默认沿用**，
+> 重跑 E1/E2 前必须先看一遍新 u 的分布（**D38**）。
 
 ```powershell
 # 秒级确认"现在到底是谁在回答、草稿从哪来"（不加载权重）
@@ -217,10 +230,11 @@ E:\Anaconda\python.exe scripts\check_backend.py
 那是**另一个项目**的服务，本项目不去杀它，只让开端口；需要 8000 时用 `-ApiPort 8000`
 并先确认该端口空闲（`检查状态.ps1` 会显示占用者）。
 
-几个实测要点（2026-09-11 本机；标注 D30 的两条为换 API 后复测）：
-* 服务**惰性加载**：API 模式下不再加载 13 GB 权重，首次提问只需加载向量库
-  （**草稿模型 Qwen2.5-0.5B 仍是首次提问才加载**）；之后单条生成 **1–3 s**
-  （本机权重后端才是"首次约 20 s、之后 10–15 s"）；
+几个实测要点（2026-09-11 本机；标注 D30 的两条为切 API 后的复测，现行默认见 D38）：
+* 服务**惰性加载**：**现行默认（本机 Qwen3-4B 回答）**首次提问才加载权重与向量库
+  （约 8 GB，1–3 分钟），之后单条 192 token 需数十秒量级；
+  **若切到 API 模式**则不再加载回答权重，首次提问只需加载向量库
+  （草稿模型首次提问才加载）；单条生成 **1–3 s**；
   重复问题命中内容寻址缓存（`data/kb/gen_cache.db`）后约 **0.05–0.1 s**。
 * 两个 **`.ps1`** 必须存为 **UTF-8 with BOM**（PowerShell 5.1 会用 GBK 解析中文而报语法错）。
 * 但 **`启动服务.bat` 恰好相反：必须纯 ASCII + CRLF 行尾**（见下方"踩过的坑"第 4 条）。
@@ -265,20 +279,31 @@ python scripts/run_pipeline.py --only e1 e5 e6 e3 e2 plots `
 > 双击 100% 起不来（而 `powershell -File .\启动服务.ps1` 直接调用却是好的，
 > 所以这个坑只在"双击 .bat"这条路径上暴露）。
 
-### 模型与算力（回答模型走 API，本地权重是兜底）
+### 模型与算力（**回答模型走本机权重**；DeepSeek API 是可选的加速路径）
 
-**最终回答用的大模型由 `configs/base.yaml` 的两行决定**（D30）：
+**最终回答用的大模型由 `configs/base.yaml` 的这几行决定**：
 
 ```yaml
-llm_backend: deepseek                    # 最终回答从哪来：deepseek（默认）| hf | vllm | rule | auto
+llm_backend: hf                          # 最终回答从哪来：hf（默认，本机权重）| deepseek | vllm | rule | auto
+causal_model: models/Qwen3-4B            # 魔搭社区的 Qwen/Qwen3-4B（约 4B，标准 transformers 架构，非 ChatGLM）
+                                         # 仅当 llm_backend 走本地时生效；权重用 scripts/download_modelscope.py 从魔搭拉取
+draft_model: models/Qwen3-4B             # 门控草稿：与回答模型**同一份权重**（手册 S3.5，共享模型与前缀）
 deepseek_model: deepseek-v4-flash        # 走 API 时的模型名（密钥只从 .env/环境变量读，绝不写在这里）
-causal_model: models/fuzi-mingcha-v1_0   # 夫子·明察（山东大学/浪潮云/中国政法大学，ChatGLM-6B 底座，6.7B）
-                                         # **仅在 llm_backend 走本地时生效**，现在是"离线兜底"而非默认
-dtype: float16                           # 本地兜底时 CPU 上必须 fp16：fp32 要 ~27 GB 内存
+dtype: float16                           # CPU 上必须 fp16：fp32 要 ~16 GB 内存（4B；旧的 6.7B 要 ~27 GB）
+local_thinking: false                    # ⚠ 本机权重**必须显式关思考**（D38）：
+                                         # Qwen3 模板不传 enable_thinking = 开思考，会先写一大段 <think>
+                                         # 把 192 token 吃光 → 正文空。与 D30 在 API 上踩的是同一款陷阱。
 ```
 
-D30 之前，最终回答一直是本地权重（先 0.5B / 1.5B，后 6.7B 的 fuzi-mingcha，见 D21、D29）；
-现在回答由 DeepSeek API 产生，**API 模式不需要下载也不加载那 13 GB 权重**。
+历史轨迹：0.5B（D9）→ 1.5B（D21）→ 6.7B `fuzi-mingcha-v1_0`（D29）→ DeepSeek API（D30）
+→ **4B `models/Qwen3-4B`（D38，现行默认）**。本机 HF 不可达（D0），所以权重一律走
+**魔搭 ModelScope**：
+
+```powershell
+E:\Anaconda\python.exe scripts\download_modelscope.py --model Qwen/Qwen3-4B
+# 断点续传 + 按 Size 先小后大 + 写 .part 后原子改名 + 按源站声明的 Size 校验落盘
+E:\Anaconda\python.exe scripts\download_modelscope.py --model Qwen/Qwen3-4B --list   # 只列清单不下载
+```
 
 秒级确认"到底是谁在回答、草稿从哪来"（不加载权重）：
 
@@ -289,51 +314,65 @@ E:\Anaconda\python.exe scripts\check_backend.py
 # 本地模式打印：生效模型路径 / 精度 / 来源（显式配置 or 自动挑选）/ 候选目录可用性 / 权重分片数
 ```
 
-留空 `causal_model` 时**本地兜底模型**的自动解析顺序（`lawgate/config.py` 的 `CAUSAL_MODEL_CANDIDATES`）：
+留空 `causal_model` 时**本地模型的自动解析顺序**（`lawgate/config.py` 的 `CAUSAL_MODEL_CANDIDATES`）：
 
-1. 本地目录 `models/fuzi-mingcha-v1_0` → `models/qwen2.5-1.5b-instruct` → `models/qwen2.5-0.5b-instruct`
+1. 本地目录 `models/Qwen3-4B` → `models/fuzi-mingcha-v1_0` → `models/qwen2.5-1.5b-instruct` → `models/qwen2.5-0.5b-instruct`
 2. HF repo id `Qwen/Qwen2.5-1.5B-Instruct` → `Qwen/Qwen2.5-0.5B-Instruct`
 3. 本机 HF 缓存快照 `E:/ModelCache/huggingface/hub/models--Qwen--Qwen2.5-0.5B-Instruct/snapshots/*`
 
 目录只有同时存在 `config.json` **与真实权重**（`model.safetensors` / `pytorch_model.bin` 等）才算可用
 （`_has_weights()`，避免把"权重还没下完"的半成品当可用模型）。
-**本机 `models/fuzi-mingcha-v1_0`（6.7B，**fp16**/CPU，15 个分片）现在只作离线兜底**（D30）；
-它此前是默认回答模型（D29），更早的默认是 1.5B（D21）、0.5B（D9）。
+
+**现行默认是 `models/Qwen3-4B`**（魔搭 `Qwen/Qwen3-4B`，约 4B，3 个 safetensors 分片，
+标准 transformers 架构，**不走** ChatGLM 兼容层，D38）；`models/fuzi-mingcha-v1_0`
+（6.7B，fp16/CPU，15 个分片，D29）仍在库内，按上面的顺序自动降级为**兜底**；
+更早的默认是 1.5B（D21）、0.5B（D9）。
 早期 `results/pilot`、`results/timing`、`figures/e0/e0_signals_*` 是 **0.5B**（HF 缓存快照）的产物、
-E1 主实验是 **1.5B**，三者口径不同，引用时必须区分（`docs/deviations.md` D21、D29）。
-**门控草稿模型是另一个模型**：默认 `Qwen/Qwen2.5-0.5B-Instruct`（从本机 HF 缓存快照取，
-`check_backend.py` 会打印它的实际路径），与回答模型不同源（D30）。
+E1 主实验是 **1.5B**、E1–E5 主结果则是"回答走 API + 0.5B 草稿"口径——四者互不相同，
+引用时必须区分（`docs/deviations.md` D21、D29、D33、D38）。
+
+**门控草稿不再是"另一个模型"**：回答模型走本地时，`build_draft_source()` 直接把草稿接到
+**回答模型本身**（来源名 `answer_model`，手册 S3.5 原设计——共享模型与前缀，prefill 不翻倍），
+所以现行配置下**没有"额外再加载一个草稿模型"这笔开销**（D38）。
+只有在 `-LlmBackend deepseek` 时才会另挑本地草稿模型，现行候选同样是 `models/Qwen3-4B`。
 向量模型优先 `models/bge-small-zh-v1.5`（手册指定模型，已实际使用，512 维）。
 
-用环境变量可临时改：`$env:LAWGATE_MODEL`、`$env:LAWGATE_EMBED`、`$env:LAWGATE_DTYPE`（本地兜底模型），
+用环境变量可临时改：`$env:LAWGATE_MODEL`、`$env:LAWGATE_EMBED`、`$env:LAWGATE_DTYPE`（本地模型），
 `$env:LAWGATE_LLM_PROVIDER`（服务形态：`deepseek`/`hf`/`rule`）、`$env:LAWGATE_DRAFT_SOURCE`
 （门控草稿来源：`auto`/`local`/`api`/`none`）、`$env:LAWGATE_DRAFT_MODEL`（草稿模型路径）。
 
 #### 三套后端的速度对照（必须知道自己在用哪套）
 
-| 项 | 本地 6.7B（fuzi-mingcha，D29 口径） | **DeepSeek API（当前默认，D30）** |
+| 项 | **本机 4B（`models/Qwen3-4B`，当前默认，D38）** | DeepSeek API（D30；`-LlmBackend deepseek` 按需切换） |
 |---|---|---|
-| 常驻内存 | ≈12.5 GiB（fp16） | 只有草稿模型 0.5B（约 2 GB，首次提问才加载） |
-| 生成速度 | 0.8–1.35 token/s（≈1 token/s） | 不适用（HTTP 调用） |
-| 192 token 单栏耗时 | **约 2–4 分钟**（两栏并行一"问"约 3–5 分钟） | **约 1–3 秒**（缓存命中 ≈0.05 s） |
-| 输出风格 | 司法语料微调，常引《劳动法》《民法典》等条文；**贪心解码下长句偶发重复打转** | 通用+法律问答风格；无"打转"现象 |
+| 常驻内存 | ≈8 GiB（4B / fp16） | 0（回答在云端）；该模式下本地草稿同样约 8 GiB |
+| 生成速度 | CPU fp16，分段与总耗时见 `docs/deviations.md` D38 | 不适用（HTTP 调用） |
+| 192 token 单栏耗时 | 见 D38 实测；命中内容缓存（`data/kb/gen_cache.db`）≈ **0.1 s** | **约 1–3 秒**（缓存命中 ≈0.05 s） |
+| 输出风格 | 通用模型（Qwen3 系），比 6.7B 司法微调模型更"稳"、写完更快 | 通用+法律问答风格；无"打转"现象 |
 | 联网 | 不需要 | **必须**（无密钥/断网会明确报错，见 D30 的"代价与风险"） |
 
-想让**离线演示**快起来：`powershell -ExecutionPolicy Bypass -File .\启动服务.ps1 -LlmBackend hf -UiMaxTokens 80`
-（`-UiMaxTokens` 让左右两栏一起变短，口径仍一致，见 D28-3）。切到本机权重后的真机端到端自检：
+> 历史口径（**D29**）：本机 6.7B `fuzi-mingcha-v1_0` 常驻 ≈12.5 GiB、0.8–1.35 token/s、
+> 192 token 单栏约 2–4 分钟，且"贪心解码下长句偶发重复打转"。该模型仍在库内作兜底。
+
+想让**离线演示**快起来：`powershell -ExecutionPolicy Bypass -File .\启动服务.ps1 -UiMaxTokens 80`
+（`-UiMaxTokens` 让左右两栏一起变短，口径仍一致，见 D28-3）。
 
 ```powershell
-$env:PYTHONIOENCODING="utf-8"
-$env:LAWGATE_LLM_PROVIDER="hf"
-E:\Anaconda\python.exe scripts\check_fuzi_e2e.py --max-tokens 48
-# 13 项断言：后端指纹(fp16/chatglm-compat) / 非流式回答 / 缓存 0 秒 / 流式==整段 → docs/fuzi_e2e.txt
+# 秒级确认现行后端指向（不加载权重）
+E:\Anaconda\python.exe scripts\check_backend.py
+# 真机端到端自检：加载 Qwen3-4B → 取门控草稿 → 生成一小段 → docs/check_qwen3_4b.txt（D38）
+# （旧的 6.7B 兜底模型另有 chatglm-compat 专用 13 项断言：）
+E:\Anaconda\python.exe scripts\check_fuzi_e2e.py --max-tokens 48   → docs/fuzi_e2e.txt
 ```
 
 #### 一"问"到底慢在哪（本地权重后端实测分段）→ 若有 GPU 会快多少
 
-下面的分段实测取自 **本地权重后端**（当时是 1.5B fp32）；它是"换 GPU 值不值"的依据。
-换到 API 之后，"慢在哪"的答案变了：**API 生成只要 ~1 s，剩下的大头是门控草稿**
-（本机 0.5B 约 1.5–3 s；实测 3.3 s 里 2.4 s 是草稿，见 D30 的"代价与风险"第 3 条）。
+下面的分段实测取自**历史**的本地权重后端（当时是 1.5B fp32）；它是"换 GPU 值不值"的依据。
+
+切到 API 时"慢在哪"的答案不同：**API 生成只要 ~1 s，剩下的大头是门控草稿**
+（D30 时代是 0.5B，约 1.5–3 s；实测 3.3 s 里 2.4 s 是草稿）。
+而**现行默认**（本机 4B，草稿与回答是同一份权重）根本不存在"单独的草稿耗时"，
+整条延迟 = 一次 prefill + 逐 token 解码，分段实测见 D38。
 
 `python scripts/_timing_breakdown.py` 把一次门控问答拆开量（本机 CPU-only，AMD64 18 核，
 1.5B fp32，`max_new_tokens=192`；产物 `docs/_timing_breakdown.txt`）：
@@ -379,14 +418,15 @@ transformers BF16 **39.7 tok/s**、vLLM BF16 **183.3 tok/s**、vLLM Int4 **217 t
 ```yaml
 device: cuda:0          # 或 cuda:1
 load_in_4bit: true      # 6–8 GB 显存也能跑；显存够就 false（fp16 更快）
-llm_backend: vllm       # deepseek（默认，API）| hf | vllm | rule | auto
+llm_backend: vllm       # hf（默认，本机权重 Qwen3-4B）| deepseek（API 加速）| vllm | rule | auto
 ```
 
 > ⚠️ 本机**没有 CUDA 设备**（`Settings.provenance()` 的 `hardware` 写明 `no CUDA`），
 > 上表是估算而非本机实测；且本机网络被中间层劫持（D0），`pip install vllm / bitsandbytes`
 > 需要先解决下载通道。顺带说明：本表估算的是"**把回答模型放到 GPU 上**"的收益——
-> 当前默认回答模型在云端（DeepSeek API），本机 GPU 能加速的只是门控草稿（0.5B）。
-> 换更小的本地模型在 CPU 上也能快约 3×，但会改变结果口径（D21、D30），不建议为了速度混用。
+> 现行默认回答模型就是本机 `models/Qwen3-4B`（D38），所以这张表直接适用于它；
+> 门控草稿与它同源（回答走本地时不额外加载），GPU 加速同样受益。
+> 换更小的本地模型在 CPU 上也能快约 3×，但会改变结果口径（D21、D29、D38），不建议为了速度混用。
 
 ---
 
@@ -411,7 +451,7 @@ flowchart TD
     ELIG -- "否" --> GATE
 
     GATE["门控 gate/"] --> DRAFT
-    DRAFT["draft_logprobs(query, k=k_draft)<br/>gate/draft.py → channel/draft_source.py 的**来源链**（D30）<br/>本机 Qwen2.5-0.5B → API logprobs → 确定性伪分布<br/>前 k=20 个 token 的 top-20 logprob 分布<br/>实际来源记入 trace.draft_source / draft_attempts"]
+    DRAFT["draft_logprobs(query, k=k_draft)<br/>gate/draft.py → channel/draft_source.py<br/>**现行默认：复用回答模型本身（answer_model，D38，不额外加载）**<br/>切 API 时才走来源链：本机草稿 → API logprobs → 确定性伪分布<br/>前 k=20 个 token 的 top-20 logprob 分布<br/>实际来源记入 trace.draft_source / draft_attempts"]
     DRAFT --> SIG
     SIG["神经不确定性信号 gate/signal.py<br/>u_signal ∈ [0,1]，越大越该检索<br/>margin=exp(−mean(top1−top2))<br/>entropy / variance / neglogp"]
 
@@ -498,7 +538,7 @@ lawgate/                        免训练三通道法律问答路由系统（v0.
 │   ├─ flk_parser.py            法条解析状态机 + cn2int/int2cn + render_article + validate_continuity
 │   ├─ audit.py                 audit_law()：条号连续性 + 100% 覆盖的往返一致性检查
 │   ├─ seed_corpus.py           人工录入的关键条文种子语料（LAW_SPECS/LIFECYCLE_SEED/SUPERSEDE_MAP/词典）
-│   ├─ seed_cases.py            合成案号与合成"文书"生成器（data_source=SYNTHETIC，必须披露）
+│   ├─ seed_cases.py            兜底合成案号/"文书"生成器（仅当知识库为空时由 build_sqlite 调用；生产库现用真实 CJWS 数据）
 │   ├─ judgment_parser.py       案号抽取/解析/入库（供真实文书导入复用）
 │   ├─ build_sqlite.py          建库主流程（--from-raw / --report）+ qa_report.md + 人工抽验清单
 │   ├─ build_vector.py          向量库构建（法条按条聚合、文书 300/50 分块）
@@ -507,7 +547,7 @@ lawgate/                        免训练三通道法律问答路由系统（v0.
 │   ├─ rerank.py                Reranker：BM25 + 字符覆盖 + 条号/案号结构命中
 │   └─ risk_terms.py            影响结论的词表（失效提示语/拒答标记/停用词），单独成文件便于复核
 ├─ eval/
-│   ├─ benchmark.py             评测集构建器（1180 条；含全部诚实性披露常量 CASE_DATA_IS_SYNTHETIC 等）
+│   ├─ benchmark.py             评测集构建器（1180 条；CASE_DATA_IS_SYNTHETIC 已由 case_registry.data_source 动态判定）
 │   ├─ metrics.py               score_item() 机械代理判分（acc/rr/lac/tvc/case_pass/invalid_law_cited…）
 │   ├─ baselines.py             6 个方法的统一接口（neverrag/alwaysrag/targ/complexity/legal_llm/legalgate）
 │   ├─ run_exp.py               统一实验框架 RunContext + run_method() + 分片合并 merge_shards()
@@ -530,10 +570,11 @@ docs/                           本套文档（deviations/ACCEPTANCE/DATA_GAP/an
                                 后者是给零基础读者的收尾总结）+ quickcheck.txt + env_report.json
                                 + check_deepseek.txt / check_deepseek_live.txt / check_deepseek_gate.txt（D30 自检与门控对照）
                                 + _archive/2026-09-13_logs/（旧的一次性日志与探针缓存）
-configs/                        base.yaml（运行配置：llm_backend / deepseek_model / causal_model / dtype / draft_source
-                                / max_new_tokens）+ thresholds.json（τ_b）
-models/                         bge-small-zh-v1.5（512 维，手册指定）+ fuzi-mingcha-v1_0（夫子·明察 6.7B，**离线兜底**，
-                                非默认回答模型，见 D30）
+configs/                        base.yaml（运行配置：llm_backend / causal_model / draft_model / dtype /
+                                draft_source / deepseek_model / max_new_tokens）+ thresholds.json（τ_b）
+models/                         Qwen3-4B（魔搭 Qwen/Qwen3-4B，**现行默认回答模型，同时是门控草稿模型**，见 D38）
+                                + bge-small-zh-v1.5（512 维，手册指定）
+                                + fuzi-mingcha-v1_0（夫子·明察 6.7B，**降级为兜底**，见 D29）
                                 + .hf_modules_cache/（远程代码动态模块缓存，见 lawgate/env_setup.py）
 ```
 
@@ -544,7 +585,8 @@ models/                         bge-small-zh-v1.5（512 维，手册指定）+ f
 | `_probe_env.py` ⚰️ | 环境自检（模块版本 / 模型缓存 / 网络）→ `docs/env_report.json`（**探针本体已不存在**，产物仍在；每次联网/换机时按 §2 的自检清单重做） |
 | `_ui_cap_probe.py` ⚰️ | 一次性探针：在**演示口径**（`-UiMaxTokens 192`）下真实加载权重，打印并断言**左栏与右栏的生成长度上限是同一个数**（D28-3，**探针本体已不存在**，结论由 `scripts/check_stream.py` 第 5 节持续把守） |
 | `_timing_breakdown.py` ⚰️ | 一次性探针：把一"问"耗时**分段**（草稿 / 检索 / 预填充 / 解码）（**探针本体已不存在**；当前耗时口径见 §1） |
-| `fetch_models.py` / `fetch_hf_files.py` | 模型拉取；后者用 `urllib` 直连绕开 `huggingface_hub` 的证书问题（D0） |
+| `fetch_models.py` / `fetch_hf_files.py` | HuggingFace 侧模型拉取；后者用 `urllib` 直连绕开 `huggingface_hub` 的证书问题（D0） |
+| `download_modelscope.py` | **魔搭 ModelScope 模型拉取（本机 HF 不可达，D0）**：`--model Qwen/Qwen3-4B` 拉现行默认权重、`--list` 只列清单不下载；断点续传（`Range`，服务端回 200 时归零重写）、按 Size 先小后大、写 `.part` 后原子改名、按源站声明的 Size 校验落盘；必需文件清单**认分片**（`model-*-of-*.safetensors` + `model.safetensors.index.json`，见 D38） |
 | `smoke_s0.py` ⚰️ | S0.4 单模型冒烟：确认能取到 logprobs 与 scores → `docs/smoke_s0.json`（**脚本与产物 2026-09-16 已删除，D37**；0.5B 吞吐 12.36 tok/s 为历史指纹） |
 | `smoke.py` ⚰️ | **S3 三通道端到端冒烟（20 组）**：打真实 `POST /chat`，逐组断言应走的通道与 trace 字段 → `docs/smoke_report.md`、`docs/smoke.json`、`docs/smoke_raw.jsonl`。断言按设计契约写死、**不随实测回填**；历史 20/20，首轮暴露的四个缺陷见 D26（**脚本与产物 2026-09-16 已删除，D37**） |
 | `quickcheck.py` | 链路自检（意图/时效/核验/通道 B）→ `docs/quickcheck.txt` |
@@ -674,43 +716,54 @@ models/                         bge-small-zh-v1.5（512 维，手册指定）+ f
 | D35 | E3 多轮**负结果**两项：① turn2 acc=0.0 是代理判分假象（案号核验追问按词面判据打分，**不再修判据**以免移动球门）；② 槽位继承错误率 1.0——继承只认 history 里经通道 B 确认的 trace 槽位，离线基准 history 无 trace → 对任何方法都永不触发（实时 UI 不受影响）；E1 分桶 b4=0.3375 与之互证：多轮是当前最弱一环 | **是**（E3 为负结果；S6.7 槽位继承验收项离线协议下不达成；列为已知局限与未来工作） |
 | D36 | **收尾（纯文档/产物治理）**：权威数字核验（确认实验已由 D33 补完、无缺失产物）→ 修掉三处过时状态回归（小白复现指南"实验未跑完"、model_card"待生成的实验/阈值占位 0.1"、risk_register R9"未处置/报告待生成"）+ 答辩预问一处数字误引 → 探针与一次性日志归档（`scripts/_archive/`、`docs/_archive/`）→ 新增 `docs/最终总结_小白版.md` 与 **R24**（判分器测量效度） | **否**（不改代码/配置/结果与既成数字；历史性陈述原文保留） |
 | D37 | **按用户要求删除全部 smoke 脚本与产物**（`scripts/smoke.py`、`scripts/smoke_stream.py`、`scripts/smoke_s0.py` 及 docs 下 7 个 smoke 产物）：S3 三通道冒烟 20/20、流式真机冒烟、S0.4 吞吐指纹均成为**历史证据**（结论与缺陷记录原文保留在 D26/D28/D30 与本报告）；现行自检回归改用 `quickcheck.py` + `check_stream.py` + `check_deepseek.py` + `check_fuzi_e2e.py` | **否**（不改代码逻辑/结果数字；删除的是验收与回归工具，相关历史结论仍可由 deviations.md 原文追溯） |
+| D38 | **回答模型与门控草稿一起换成魔搭社区的 `Qwen/Qwen3-4B`**（落盘 `models/Qwen3-4B`，约 4B，fp16/CPU，**2026-09-13 起为默认**；权重经新增的 `scripts/download_modelscope.py` 从魔搭拉取）：`base.yaml` 显式钉死 `causal_model` / `draft_model` 两条，候选链首位改为 `models/Qwen3-4B`；回答走本地时草稿**复用回答模型本身**（`answer_model` 来源，手册 S3.5，不再额外加载 0.5B）；`draft_source._local_factory` 的 dtype 从写死的 `auto`（CPU 上 = fp32，4B 要 ~16 GB）改为跟 `base.yaml` 走 `float16`；UI 页脚 / `启动服务.ps1` 横幅 / `检查状态.ps1` 权重清单里写死的模型名统一改为动态取 `provenance()` | **是**（回答模型与门控信号来源同时改变：现行 u 的尺度与 0.5B 口径不同，`configs/thresholds.json` 的 τ_b 与 TARG 的 τ=0.10 **不能默认沿用**，重跑 E1/E2 前须先看新 u 分布；历史 E0–E5 结果不可与现行配置直接比较） |
 
 ---
 
 ## 6. 限制与诚实声明
 
-1. **案号库与"文书"全部是合成数据**：`case_registry` 600 条、`judgments` 600 篇，
-   `data_source` 全为 `SYNTHETIC`（`data/kb/qa_report.md` §kb_stats 实测）。它们遵循真实案号的**格式规则**，
-   但**不对应真实案件**，也**不是**来自中国裁判文书网。因此 E6 的指标只能表述为
-   "核验器在四类输入上的判别能力"，**不能**表述为对真实文书库的覆盖能力；
-   case 类条目的 `golden_source` 一律为 `null`（不伪造 URL）。
-2. **法条语料是人工录入的关键条文种子语料，不是官方原文**：`legal_provisions` 158 行 /
-   95 个去重 (law, article) 对 / 13 部法律，全部 `source_kind=MANUAL_TRANSCRIPT`、
-   `verification=PENDING_FLK_VERIFICATION`。**《民法典》种子语料只收录 62 条，而非全量 1260 条**；
-   现行有效去重条文仅 80 条（民法典 62 / 公司法 7 / 劳动合同法 7 / 民事诉讼法 1 / 民法典时间效力规定 3）。
-   解析审计的 100% 往返一致率只证明"没丢字、没串条"，**不能**证明"源文本就是官方原文"。
-3. **回答模型在云端、本机只跑门控与检索**：torch 2.11.0+cpu、18 逻辑核、无 CUDA；`vllm` 未安装
-   （`docs/env_report.json` 中 `vllm.available=false`）。**最终回答默认由 DeepSeek 官方 API 的
-   `deepseek-v4-flash` 生成**（关思考，单条 192 token 约 1–3 s，见 D30）；本机只跑门控草稿
-   （Qwen2.5-0.5B）与 bge 向量编码。由此产生的三条限制必须写明：
-   （a）**联网依赖与计费**：每问一次 HTTPS 请求（命中内容缓存则 0 请求），按 token 计费；
-   断网/无密钥会明确报错（提示查 `.env` 的 `DEEPSEEK_API_KEY`），**离线演示**请用
-   `启动服务.ps1 -LlmBackend hf` 切回本机权重；
-   （b）**首字延迟主要由取草稿决定**（本机 0.5B 约 1.5–3 s，实测 3.3 s 里 2.4 s 是草稿），
-   不是生成本身；
-   （c）**τ_b 已按新草稿源重校准**（2026-09-12，D33-3：b1 0.29 / b2 1.0 / b3 1.0 / b4 1.0；
+1. **案号库现已是真实裁判文书（2026-09-13 补齐）**：`case_registry` / `judgments` 共
+   **1610 条**，`data_source` 全为 `CJWS`（来源 ModelScope `qazwsxplkj/cn-judgment-docs`，
+   中国裁判文书网公开文书第三方整理版），带真实案号、法院、案由、裁判日期、原文与来源链接；
+   case 类条目的 `golden_source` 取真实来源链接（不再为 `null`）。E6 结论口径已升级为
+   "真实文书库覆盖"。**仍存的局限**："库里没有但确实存在"的**假阴性率**需额外真实案号抽样
+   才能直接测量，本仓库目前尚无该抽样。
+2. **法条全文现已用真实来源补齐**：`legal_provisions` 共 **188 部法律 / 18281 行 /
+   16046 条去重**（《民法典》全量 **1260 条**；`validity_status`：现行有效 16748 /
+   **已废止 985** / 已修订 548）。来源分两支：
+   （a）主体 **175 部现行法**来自开源数据集 **Chinese-Laws-folk**
+   （`github.com/taburise/Chinese-Laws-folk`，`source_db='CLF'`）；
+   （b）**13 部**（含 7 部已废止法：合同法 / 物权法 / 侵权责任法 / 婚姻法 / 继承法 /
+   收养法 / 担保法）来自**中国人大网官方全文页** + 开源结构化数据集 **laws-data**
+   （`github.com/13098806890/laws-data`），已登记 `ingest_provenance`
+   （7×`NPC_OFFICIAL` + 6×`LAWS_DATA_DATASET`，全部 `VERIFIED`、往返一致率 1.0）。
+   ⚠️ 已知缺口：CLF 数据源不含**刑法、刑事诉讼法、个人信息保护法、专利法**等核心大法，
+   这些法目前不在库内。
+3. **回答模型在本机 CPU 上**：torch 2.11.0+cpu、18 逻辑核、无 CUDA；`vllm` 未安装
+   （`docs/env_report.json` 中 `vllm.available=false`）。**最终回答默认由本机权重
+   `models/Qwen3-4B`（魔搭 `Qwen/Qwen3-4B`，约 4B，fp16）生成**（D38）；
+   门控草稿与它**是同一份权重**（手册 S3.5：共享模型与前缀，prefill 不翻倍），
+   bge 负责向量编码。由此产生的限制必须写明：
+   （a）**没有 GPU 的代价**：CPU 逐 token 解码决定了 192 token 的等待量级（实测见 D38）；
+   想快就切云端 API（`-LlmBackend deepseek`），代价是联网 + 按 token 计费，
+   断网/无密钥会明确报错（提示查 `.env` 的 `DEEPSEEK_API_KEY`）；
+   （b）**历史吞吐差异必须标注口径**：`results/pilot`、`results/timing` 与 E0 门控信号采集
+   用的是 **0.5B**、E1 主实验是 **1.5B**、E1–E5 主结果则是"回答走 API + 0.5B 草稿"口径，
+   与现行 4B 配置**全都不同**，引用时必须区分（D21、D29、D30、D33、D38）；
+   （c）**τ_b 是 0.5B 草稿口径下校准的**（2026-09-12，D33-3：b1 0.29 / b2 1.0 / b3 1.0 / b4 1.0；
    b1 仍 `feasible:false`，0.29 为 `largest_feasible` 兜底值）；TARG 基线按 D33-4 报双臂
-   （手册 τ=0.10 + 调参 τ*=0.01）。更换回答/草稿后端后须重走"看 u 分布 → 重校准"流程。
-   离线兜底仍是 **`models/fuzi-mingcha-v1_0`（夫子·明察，ChatGLM-6B 底座，6.7B，fp16/CPU，见 D29）**：
+   （手册 τ=0.10 + 调参 τ*=0.01）。**草稿换成 Qwen3-4B 后 u 的绝对尺度会变，
+   重跑 E1/E2 前必须先看一遍新 u 的分布，再决定是否重新校准**（D38）。
+   方法间对比因共用同一模型与超参而仍然公平。
+   降级兜底仍是 **`models/fuzi-mingcha-v1_0`（夫子·明察，ChatGLM-6B 底座，6.7B，fp16/CPU，见 D29）**：
    约 **1 token/s**（192 token 单栏 2–4 分钟），贪心解码下长句**偶发重复打转**。
-   方法间对比因共用同一模型与超参而仍然公平。早期 `results/pilot`、`results/timing`
-   与 E0 门控信号采集用的是 0.5B、E1 主实验是 1.5B，引用时须注明口径（D21、D29、D30）。
 4. **`need_retrieval` / `golden_answer` / `gold_pass` 全部是规则化生成，不是人工标注**：
    本环境**没有任何人工标注员**；条目的 `annotators=['A','B']` 与 `arbitrated=false` 是**占位字段**。
 5. **`kappa_report.md` 中的 κ 来自模拟标注员**（噪声率 0.12，程序化生成两份假投票）：
    `need_retrieval κ=0.7263`、`golden_provisions κ=0.8920` 只证明 κ 流水线可运行、结果可复现。
    **禁止**表述为"标注者间一致性已达 κ=X"，**禁止**作为"人工标注已完成"的证据。
-6. **没有真实裁判文书网数据**：E6 无法测量真实场景中最难的"库里没有但确实存在"的假阴性。
+6. **"库里没有但确实存在"的假阴性率尚缺直接测量**：E6 已基于真实文书库重跑，但假阴性
+   需额外"库外真实案号"抽样才能量化；论文限制章节须如实写明该指标当前未测。
 7. **自动判分是机械代理判据**（lexical/structural proxy，见 `lawgate/eval/metrics.py` 模块说明），
    不是人工判定，也不是 LLM 裁判；它能把"是否引用了正确法条/是否识别了失效"测准，
    对"答案表述质量"只能给近似分。判分器本身也出过**三层测量效度缺陷**（D34：继承陈述句/

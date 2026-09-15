@@ -126,7 +126,7 @@
 | **实测证据** | `docs/env_report.json`：`torch 2.11.0+cpu`、`cuda_available=false`、`cuda_device_count=0`；`vllm.available=false`；本机确有 `Qwen/Qwen2.5-0.5B-Instruct` 完整缓存；1.5B 权重已下载完成（`models/qwen2.5-1.5b-instruct/model.safetensors` 3087467144 字节，`ok: true`，约 1.81 MB/s）但实验采用 0.5B |
 | **影响** | 0.5B 的答案质量与指令遵循能力显著弱于 7B，**绝对准确率不可与手册预期对比**；门控信号质量同样受模型规模影响（R4 的红灯结论需在大模型上复测） |
 | **处置动作** | ① 按手册风险表执行降级（"GPU 不可用 → 改为小模型 + 云额度；通道 B 与 E5/E6 纯 CPU 照常跑"）；② 保证**方法间对比公平**：6 个方法共用同一模型、同一 `max_new_tokens`、同一 `top_k`/`rerank`/`k_draft`（`lawgate/eval/run_exp.py` 的 `common` 参数与 `RouterOptions` 同步传递，`baselines.build_methods()` 统一注入）；③ 所有结果的图注与 provenance 自动写入实际模型名与设备（`Settings.provenance()`、`io.stamp_footer()`）；④ `VLLMLLM` 代码路径完整保留，`llm_backend: vllm` 时即可切换 |
-| **当前状态** | **已触发并已处置**（降级 + 公平性保障 + 溯源） |
+| **当前状态** | **已触发并已处置**（降级 + 公平性保障 + 溯源）。⚠ **规模已显著改善（2026-09-13，D38）**：现行回答/草稿模型是本机 **`models/Qwen3-4B`（4B，fp16/CPU，纯离线）**，比本条触发时所记录的 0.5B 大一个量级——"0.5B 质量天花板"这一条对本配置**不再成立**（见 `docs/model_card.md` F4）；但**无 GPU** 这个根因仍在，绝对吞吐仍受 CPU 限制 |
 | **具体落点** | `lawgate/config.py: CAUSAL_MODEL_CANDIDATES`、`lawgate/channel/llm_base.py: get_llm()`、`docs/deviations.md` D9、`docs/env_report.json` |
 | **残余敞口** | 拿到 GPU 后恢复 `device: cuda:0` / `load_in_4bit: true` / `llm_backend: vllm` 与更大模型，重跑 E0/E1（`docs/DATA_GAP.md` G3） |
 
@@ -356,10 +356,10 @@
 | **触发条件** | 把最终回答的大模型从本地权重（fuzi-mingcha 6.7B）换成 DeepSeek 官方 API（`deepseek-v4-flash`）后，每次生成都要发 HTTPS 请求 |
 | **影响** | ① **断网/无密钥即答不出**（此前本地权重离线可用）；② 每次生成**产生费用**，且费用随 token 变化；③ 密钥一旦泄露（截图/聊天记录/误提交）等于把账号交出去；④ 云端模型是**会变的**（服务端把旧模型名路由到新版本，实测 `deepseek-v4-flash` 回报 `model=deepseek-flash`），同一份题面在不同日期不保证逐字可复现 |
 | **处置动作（已实测生效）** | ① **一键切回本地**：`启动服务.ps1 -LlmBackend hf` 或 `$env:LAWGATE_LLM_PROVIDER="hf"`，本地 fuzi-mingcha 权重仍在 `models/`，离线演示不受影响；② **密钥只走 `.env`/环境变量**（`.gitignore` 已排除），代码与 `configs/base.yaml` **从不写明文**，`/health` 与 `check_backend.py` 只报"有没有"；③ **费用透明**：`DeepSeekLLM.describe()` 与逐次调用台账 `call_log` 记录每次的 prompt/completion token 与耗时，`/health` 的 `cache` 块给出缓存节省量；④ **内容缓存**（`data/kb/gen_cache.db`）让重复提问**不重复计费**，也保证同一题面在本机逐字可复现；⑤ 真机自检 `scripts/check_deepseek.py`（离线段 29/29 + `--live`）作为日常回归（原冒烟 `scripts/smoke.py`（历史 20/20）已于 2026-09-16 删除，D37，结论留档 deviations.md） |
-| **当前状态** | **已触发并已处置**（残余敞口见下） |
-| **具体落点** | `lawgate/channel/deepseek_llm.py`、`lawgate/channel/draft_source.py`、`lawgate/env_setup.py`（读 `.env`）、`configs/base.yaml: llm_backend`、`.env`（不提交）、`scripts/check_deepseek.py`、`docs/deviations.md` D30 |
-| **残余敞口** | ① **断网即不可用**（除非切回本地），答辩/演示前应确认网络与密钥（`scripts/check_backend.py` 秒级可查）；② ~~门控阈值 τ_b 尚未按新草稿模型重新校准~~ → **已于 2026-09-12 解除**（D33-3：b1 0.29 / b2 1.0 / b3 1.0 / b4 1.0）；换后端仍须重走"看 u 分布（`scripts/check_deepseek.py --live --with-local-draft`）→ 重校准"；③ 历史 E0–E6 结果的**旧口径**（1.5B/tok80）已归档 `results/_archive/2026-09-11_qwen1.5b_tok80/`，新口径 E1–E5 已全部落盘（D33），**新旧禁止并排引用**；④ 云端模型版本漂移不可控（只能靠缓存与 `provenance` 留痕）；⑤ **实际花费已有台账**：`data/kb/gen_cache.db` 记录 deepseek generate **3188 条 / 1,009,487 tokens**（含全部实验与 τ 缩放臂），重复提问不二次计费 |
-| **与偏差的对应** | D30（另见 D29：上一版接入的是本地 fuzi-mingcha） |
+| **当前状态** | **已触发并已处置**（残余敞口见下）。⚠ **风险面已收窄（2026-09-13，D38）**：默认后端已从 `deepseek` 改回**本机权重** `models/Qwen3-4B`（`llm_backend: hf`），所以"每次生成都要发 HTTPS 请求"**不再是默认行为**——本条风险现在只在**显式**用 `启动服务.ps1 -LlmBackend deepseek` 时才生效 |
+| **具体落点** | `lawgate/channel/deepseek_llm.py`、`lawgate/channel/draft_source.py`、`lawgate/env_setup.py`（读 `.env`）、`configs/base.yaml: llm_backend`、`.env`（不提交）、`scripts/check_deepseek.py`、`docs/deviations.md` D30 / D38 |
+| **残余敞口** | ① ~~断网即不可用~~ → **默认已不适用（D38）**：现行默认走本机权重、完全离线；只有显式切 API 时才需要网络与密钥（`scripts/check_backend.py` 秒级可查当前服务形态）；② ~~门控阈值 τ_b 尚未按新草稿模型重新校准~~ → **已于 2026-09-12 解除**（D33-3：b1 0.29 / b2 1.0 / b3 1.0 / b4 1.0）；但那是 **0.5B 草稿口径**，**D38 把草稿换成 Qwen3-4B 后须重走"看 u 分布（`scripts/check_draft_u.py`）→ 决定是否重校准"**；③ 历史 E0–E6 结果的**旧口径**（1.5B/tok80）已归档 `results/_archive/2026-09-11_qwen1.5b_tok80/`，新口径 E1–E5 已全部落盘（D33），**新旧禁止并排引用**；④ 云端模型版本漂移不可控（只能靠缓存与 `provenance` 留痕）；⑤ **实际花费已有台账**：`data/kb/gen_cache.db` 记录 deepseek generate **3188 条 / 1,009,487 tokens**（含全部实验与 τ 缩放臂），重复提问不二次计费 |
+| **与偏差的对应** | D30（另见 D29：上一版接入的是本地 fuzi-mingcha；D38：默认又回到本机权重并换成 Qwen3-4B） |
 
 ---
 

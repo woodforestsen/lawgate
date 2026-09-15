@@ -1,0 +1,103 @@
+{
+  "settings": {
+    "hardware": "CPU AMD64 / 18 cores / no CUDA",
+    "device": "cpu",
+    "llm_provider": "local",
+    "llm_api_base": null,
+    "llm_api_model": null,
+    "llm_thinking": false,
+    "has_api_key": true,
+    "draft_source": "auto",
+    "draft_model": "Qwen3-4B",
+    "draft_model_path": "models/Qwen3-4B",
+    "draft_model_source": "环境变量 LAWGATE_DRAFT_MODEL / base.yaml",
+    "causal_model": "Qwen3-4B",
+    "causal_model_path": "models/Qwen3-4B",
+    "causal_model_dtype": "float16",
+    "causal_model_source": "configs/base.yaml 的 causal_model（显式指定）",
+    "embed_model": "bge-small-zh-v1.5",
+    "llm_backend": "hf",
+    "date": "2026-09-14",
+    "version": "0.1.0"
+  },
+  "rows": [
+    {
+      "query": "什么是离婚冷静期？",
+      "u_margin": 0.0001,
+      "u_entropy": 0.0503,
+      "u_variance": 0.0369,
+      "u_neglogp": 0.0696,
+      "raw_margin": 9.4531,
+      "source": "answer_model",
+      "seconds": 18.42,
+      "cached": true,
+      "n_positions": 20,
+      "draft_head": "离婚冷静期是指根据《中华人民共和国民法典》的规定，夫妻双方自愿离婚的，"
+    },
+    {
+      "query": "《合同法》第52条规定哪些情形合同无效？",
+      "u_margin": 0.0001,
+      "u_entropy": 0.0714,
+      "u_variance": 0.0325,
+      "u_neglogp": 0.1087,
+      "raw_margin": 9.291,
+      "source": "answer_model",
+      "seconds": 35.13,
+      "cached": true,
+      "n_positions": 20,
+      "draft_head": "《中华人民共和国合同法》第52条规定了合同无效的情形，具体包括以下五种"
+    },
+    {
+      "query": "（2022）沪01民终12345号 这个案子是怎么回事？",
+      "u_margin": 0.0,
+      "u_entropy": 0.1027,
+      "u_variance": 0.0692,
+      "u_neglogp": 0.136,
+      "raw_margin": 16.1172,
+      "source": "answer_model",
+      "seconds": 37.18,
+      "cached": true,
+      "n_positions": 20,
+      "draft_head": "关于（2022）沪01民终12345号案件，"
+    },
+    {
+      "query": "担保法现在还有用吗？",
+      "u_margin": 0.0005,
+      "u_entropy": 0.0623,
+      "u_variance": 0.0201,
+      "u_neglogp": 0.0782,
+      "raw_margin": 7.5273,
+      "source": "answer_model",
+      "seconds": 31.46,
+      "cached": true,
+      "n_positions": 20,
+      "draft_head": "《中华人民共和国民法典》自2021年1月1日起施行，取代"
+    },
+    {
+      "query": "用人单位未签书面劳动合同超过一个月，劳动者可以主张什么？",
+      "u_margin": 0.0001,
+      "u_entropy": 0.0319,
+      "u_variance": 0.0064,
+      "u_neglogp": 0.0308,
+      "raw_margin": 9.6387,
+      "source": "answer_model",
+      "seconds": 32.48,
+      "cached": true,
+      "n_positions": 20,
+      "draft_head": "根据《中华人民共和国劳动合同法》第八十二条的规定，用人单位自用工之日起超过一个月"
+    },
+    {
+      "query": "《民法典》第1077条与已废止的《合同法》第52条有什么不同？",
+      "u_margin": 0.0,
+      "u_entropy": 0.0,
+      "u_variance": 0.0,
+      "u_neglogp": 0.0,
+      "raw_margin": 18.9648,
+      "source": "answer_model",
+      "seconds": 37.04,
+      "cached": true,
+      "n_positions": 20,
+      "draft_head": "《民法典》第1077条与已废止的《合同法》"
+    }
+  ]
+}

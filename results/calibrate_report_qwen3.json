@@ -1,0 +1,133 @@
+{
+  "provenance": "Qwen3-4B 草稿 / 按产品默认路由 hybrid 校准（b2→margin、b1/b3/b4→complexity），基于 e0_qwen3 的 need_retrieval 金标逐桶 Youden 点校准（信号判别力校准，非端到端 correct 校准）",
+  "date": "2026-09-14",
+  "router_mode_default": "hybrid",
+  "signal_buckets_default": [
+    "b2"
+  ],
+  "auc_margin_all": 0.8964,
+  "replaces": "旧 τ_b=0.29/1.0/1.0/1.0（0.5B 尺度，对 Qwen3-4B 失效）",
+  "thresholds_written": "configs/thresholds.json = hybrid 适用 τ_b（b2 为 margin 尺度，b1/b3/b4 为 complexity 尺度 [0,1]）",
+  "hybrid": {
+    "taus": {
+      "b1": 0.0,
+      "b2": 0.0002,
+      "b3": 0.0,
+      "b4": 0.0
+    },
+    "per_bucket": {
+      "b1": {
+        "signal_used": "complexity",
+        "n": 60,
+        "tau": 0.0,
+        "youden": 0.05,
+        "tpr": 1.0,
+        "fpr": 0.95,
+        "need_retrieval_true": 40,
+        "predicted_trigger": 59
+      },
+      "b2": {
+        "signal_used": "margin",
+        "n": 76,
+        "tau": 0.0002,
+        "youden": 0.7368,
+        "tpr": 0.8158,
+        "fpr": 0.0789,
+        "need_retrieval_true": 38,
+        "predicted_trigger": 34
+      },
+      "b3": {
+        "signal_used": "complexity",
+        "n": 40,
+        "tau": 0.0,
+        "youden": 1.0,
+        "tpr": 1.0,
+        "fpr": 0.0,
+        "need_retrieval_true": 40,
+        "predicted_trigger": 40
+      },
+      "b4": {
+        "signal_used": "complexity",
+        "n": 60,
+        "tau": 0.0,
+        "youden": 0.0,
+        "tpr": 1.0,
+        "fpr": 1.0,
+        "need_retrieval_true": 40,
+        "predicted_trigger": 60
+      }
+    },
+    "dev_rr": 0.8178,
+    "retrieval_drop_vs_alwaysrag": 0.1822
+  },
+  "signal_mode_reference": {
+    "taus": {
+      "b1": 0.0001,
+      "b2": 0.0002,
+      "b3": 0.0,
+      "b4": 0.0002
+    },
+    "per_bucket": {
+      "b1": {
+        "signal_used": "margin",
+        "n": 60,
+        "tau": 0.0001,
+        "youden": 0.575,
+        "tpr": 0.675,
+        "fpr": 0.1,
+        "need_retrieval_true": 40,
+        "predicted_trigger": 29
+      },
+      "b2": {
+        "signal_used": "margin",
+        "n": 76,
+        "tau": 0.0002,
+        "youden": 0.7368,
+        "tpr": 0.8158,
+        "fpr": 0.0789,
+        "need_retrieval_true": 38,
+        "predicted_trigger": 34
+      },
+      "b3": {
+        "signal_used": "margin",
+        "n": 40,
+        "tau": 0.0,
+        "youden": 1.0,
+        "tpr": 1.0,
+        "fpr": 0.0,
+        "need_retrieval_true": 40,
+        "predicted_trigger": 40
+      },
+      "b4": {
+        "signal_used": "margin",
+        "n": 60,
+        "tau": 0.0002,
+        "youden": 0.4,
+        "tpr": 0.55,
+        "fpr": 0.15,
+        "need_retrieval_true": 40,
+        "predicted_trigger": 25
+      }
+    },
+    "dev_rr": 0.5424,
+    "retrieval_drop_vs_alwaysrag": 0.4576
+  },
+  "caveats": [
+    "严格端到端 acc 校准需 Qwen3-4B 的 neverrag/alwaysrag baseline（correct 标签），CPU 数十小时不可行；本 τ_b 用 need_retrieval 构造标签校准，RR/降 X% 在 Qwen3-4B 口径下真实。",
+    "need_retrieval 标签由规则化构造（非人工标注），且 dev 的 case 类为合成文书；AUC 只反映信号与构造标签的一致性，不等同真实判别力。",
+    "b1 的 complexity 评分 AUC=0.108（反判别），用 complexity 门控 b1 不可靠；E0 建议将信号桶扩到 b1/b4（margin 在 b1=0.936、b4=0.874 均强），可显著改善门控。",
+    "阈值量级极小（~1e-4，区分带极窄），对 margin 信号漂移敏感 → 脆弱，非稳健门控。"
+  ],
+  "recommended_config": {
+    "change": "router.py: signal_buckets=('b2',) → ('b1','b2','b4')；b3 走 always-retrieve",
+    "taus_to_use": {
+      "b1": 0.0001,
+      "b2": 0.0002,
+      "b3": 0.0,
+      "b4": 0.0002
+    },
+    "expected_dev_rr": 0.5424,
+    "expected_retrieval_drop": 0.4576,
+    "note": "此配置下门控在 b1/b2/b4 均有强判别力，检索降 ~46%；阈值仍属 ~1e-4 脆弱量级。"
+  }
+}

@@ -16,8 +16,9 @@
 
 **流式输出**：两栏都是边生成边显示（见 ``respond_stream``），且**两栏生成长度上限相同**
 （`gen_max_tokens()`，默认 192 token，见 `docs/deviations.md` D28-3）。
-延迟取决于后端：走 DeepSeek API（D30 默认）单条 1–3 s；走本机 fuzi-mingcha
-（6.7B / CPU fp16）单条 2–4 分钟，那种情况下不流式就是几分钟白屏。
+延迟取决于后端：走 DeepSeek API 单条 1–3 s；走本机权重（**现行默认
+models/Qwen3-4B**，CPU fp16；更早是 fuzi-mingcha 6.7B，D29）则慢得多，
+那种情况下不流式就是长时间白屏。
 """
 from __future__ import annotations
 
@@ -338,14 +339,17 @@ def build_demo() -> gr.Blocks:
                      "命中内容缓存后 ≈ 0.05 s。")
         model_line = (f"**{model_name}**（DeepSeek 官方 API：{prov['llm_api_base']}；"
                       f"思考模式 {'开' if prov.get('llm_thinking') else '关'}）")
-        head_note = ("语言模型走 DeepSeek 官方 API，**不需要**在本机加载 13 GB 权重。"
-                     "门控草稿用本机 Qwen2.5-0.5B：**首次提问**会多花约 10–15 秒加载它，"
-                     "之后每次提问都是 1–3 秒。")
+        head_note = ("语言模型走 DeepSeek 官方 API，**不需要**在本机加载权重。"
+                     f"门控草稿用本机 {prov.get('draft_model')}：**首次提问**会多花时间"
+                     "把它加载进内存，之后每次提问都是 1–3 秒。")
     else:
-        wait_line = ("CPU 上首字几秒到十几秒出现，整段最长约 60–90 s（命中缓存 ≈ 0.1 s）。")
+        wait_line = ("CPU 上首字几秒到几十秒出现，整段受生成长度上限约束"
+                     "（命中缓存 ≈ 0.1 s）。实测数字见 `docs/deviations.md` D38。")
         model_line = (f"**{model_name}**（{prov.get('causal_model_dtype', 'auto')} 精度，"
                       "本机权重）")
-        head_note = "语言模型在本机 CPU 上运行。"
+        head_note = ("语言模型在本机 CPU 上运行。门控草稿与回答模型是**同一份权重**"
+                     "（手册 S3.5 原设计：草稿与正式生成共享模型与前缀，prefill 不翻倍），"
+                     "因此没有\"额外再加载一个草稿模型\"这笔开销。")
 
     with gr.Blocks(title="CA-LegalGate 律核 · 双栏对照") as demo:
         gr.Markdown(
@@ -396,13 +400,15 @@ def build_demo() -> gr.Blocks:
                    [left, right, trace_html, state, note])
 
         # 页脚的口径必须与**实际生效**的模型一致：早期写死的 0.5B 早已过时
-        # （D21），后来换成 fuzi-mingcha（D29），现在默认走 DeepSeek API（D30）——
+        # （D21），后来换成 fuzi-mingcha（D29），再后来默认走 DeepSeek API（D30），
+        # 2026-09-13 起默认又回到本机权重 models/Qwen3-4B（D38）——
         # 故这里一律从 Settings.provenance() 动态取，避免再次写错。
         draft_line = (
             f"门控草稿来源 `{prov.get('draft_source')}`"
-            f"（默认顺序：本机 {prov.get('draft_model')} → API logprobs → 确定性评分；"
+            f"（本机 {prov.get('draft_model')} → API logprobs → 确定性评分；"
+            "回答模型走本地时草稿直接复用回答模型本身，手册 S3.5；"
             "每条 trace 的 **草稿来源** 行会写明本次实际用了哪条，"
-            "见 `docs/deviations.md` D30 的实测对照）。")
+            "见 `docs/deviations.md` D30 / D38）。")
         gr.Markdown(
             "---\n"
             f"**说明**：本项目运行在 {prov['hardware']} 环境，语言模型为 "

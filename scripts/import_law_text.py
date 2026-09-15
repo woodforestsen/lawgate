@@ -38,7 +38,7 @@ from lawgate.config import get_settings  # noqa: E402
 from lawgate.knowledge.audit import audit_law  # noqa: E402
 from lawgate.knowledge.build_sqlite import connect  # noqa: E402
 from lawgate.knowledge.flk_parser import parse_law_file, validate_continuity  # noqa: E402
-from lawgate.knowledge.seed_corpus import LAW_SPECS  # noqa: E402
+from lawgate.knowledge.seed_corpus import LAW_SPECS, OFFICIAL_ARTICLE_COUNT  # noqa: E402
 
 TODAY = date.today().isoformat()
 
@@ -126,7 +126,8 @@ def import_one(conn: sqlite3.Connection, raw_dir: Path, law_short: str,
                (law_short,version,source_kind,source_url,retrieval_date,verification,
                 verified_by,verified_date,n_provisions,continuity_gaps,note)
                VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
-            (law_short, spec["version"], "FLK_OFFICIAL", spec["source_url"], TODAY,
+            (law_short, spec["version"],
+             spec.get("source_kind", "FLK_OFFICIAL"), spec["source_url"], TODAY,
              "VERIFIED", verified_by, TODAY, len(provs),
              json.dumps(cont["missing"][:100]),
              f"官方原文导入，往返一致率 {report['roundtrip_rate']}"))
@@ -160,8 +161,8 @@ def main() -> int:
 
     results = []
     for law in laws:
-        em = args.expect_max if len(laws) == 1 else (
-            1260 if law == "民法典" else None)
+        # 单法导入允许 --expect-max 覆盖；批量导入时用官方公布条数逐部校验
+        em = args.expect_max if len(laws) == 1 else OFFICIAL_ARTICLE_COUNT.get(law)
         r = import_one(conn, raw_dir, law, args.file if len(laws) == 1 else None,
                        em, args.verified_by, args.dry_run)
         print(json.dumps(r, ensure_ascii=False))

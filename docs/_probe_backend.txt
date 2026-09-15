@@ -1,0 +1,20 @@
+﻿== 鐢熸晥閰嶇疆 ==
+  鏈嶅姟褰㈡€?    = local锛坙lm_backend=hf锛?
+  causal_model = models/fuzi-mingcha-v1_0
+  dtype        = float16
+  device       = cpu
+  max_new_tokens = 192
+  鏉ユ簮         = configs/base.yaml 鐨?causal_model锛堟樉寮忔寚瀹氾級
+  妯″瀷鏍囩     = fuzi-mingcha-v1_0
+  鍚戦噺妯″瀷     = models\bge-small-zh-v1.5
+  纭欢         = CPU AMD64 / 18 cores / no CUDA
+
+== 鍊欓€夐『搴忎笌鍙敤鎬э紙鏈湴鏉冮噸锛岃蛋 API 鏃跺彧鏄厹搴曪級==
+  1. models/fuzi-mingcha-v1_0               鐩綍瀛樺湪     鏉冮噸瀹屾暣 鈫?鏈湴鍏滃簳
+  2. models/qwen2.5-1.5b-instruct           -        鏃犳潈閲?
+  3. models/qwen2.5-0.5b-instruct           -        鏃犳潈閲?
+  4. Qwen/Qwen2.5-1.5B-Instruct             -        鏃犳潈閲?
+  5. Qwen/Qwen2.5-0.5B-Instruct             -        鏃犳潈閲?
+
+== 缁撹 ==
+  鏈€缁堝洖绛斿皢鐢辨湰鍦版ā鍨?fuzi-mingcha-v1_0 鐢熸垚锛?5 涓潈閲嶅垎鐗囷紝绮惧害 float16锛?

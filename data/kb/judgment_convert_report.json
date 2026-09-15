@@ -1,0 +1,33 @@
+{
+  "date": "2026-09-13",
+  "src": [
+    ".workbuddy\\_probe\\dl\\preprocessed\\preprocessed_2021_09.csv",
+    ".workbuddy\\_probe\\dl\\preprocessed\\preprocessed_2021_10.csv"
+  ],
+  "per_cause_cap": 500,
+  "causes": [
+    "民间借贷纠纷",
+    "劳动争议",
+    "离婚纠纷",
+    "房屋租赁合同纠纷"
+  ],
+  "total_kept": 1610,
+  "kept_by_cause": {
+    "劳动争议": 500,
+    "民间借贷纠纷": 500,
+    "房屋租赁合同纠纷": 500,
+    "离婚纠纷": 110
+  },
+  "cause_hit_rows": {
+    "劳动争议": 2078,
+    "民间借贷纠纷": 6677,
+    "房屋租赁合同纠纷": 1050,
+    "离婚纠纷": 112
+  },
+  "dropped": {
+    "bad_case_no": 9,
+    "short_text": 2,
+    "duplicate": 0
+  },
+  "dataset": "ModelScope qazwsxplkj/cn-judgment-docs (中国裁判文书网公开裁判文书第三方整理版)"
+}

@@ -5,9 +5,11 @@
 2. 输出混淆矩阵（V1–V4 四类 × 五级判定）与二分类 P/R/F1；
 3. 产出 figures/e6/confusion.png + results/e6/{records.jsonl,prf.json,confusion.json}。
 
-**结论口径限制（必须随结果披露）**：本仓库 case_registry 为**合成**案号库
-（data_source=SYNTHETIC），因此指标只反映"核验器在格式合法/不存在/案由不符/
-格式非法四类输入上的判别能力"，**不能**表述为对中国裁判文书网的覆盖能力。
+**结论口径限制（必须随结果披露）**：本仓库 case_registry 的来源由 `data_source`
+列决定（SYNTHETIC=合成联调库；CJWS=真实裁判文书）。当为合成库时，指标只反映
+"核验器在格式合法/不存在/案由不符/格式非法四类输入上的判别能力"，**不能**表述为
+对中国裁判文书网的覆盖能力；当为真实文书库时，V1/V3 的"真实"即对应真实案件，
+但仍需注意"库里没有但确实存在"的假阴性无法在本实验内测量。
 
     python scripts/e6_case_verify.py
 """
@@ -23,12 +25,28 @@ from pathlib import Path
 os.environ.setdefault("KMP_DUPLICATE_LIB_OK", "TRUE")
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
+import sqlite3  # noqa: E402
+
 from lawgate.channel.b_case_verify import LEVELS, CaseNoVerifier  # noqa: E402
+from lawgate.config import get_settings  # noqa: E402
 from lawgate.eval import io as eio  # noqa: E402
 from lawgate.eval.metrics import case_verify_prf  # noqa: E402
 from lawgate.gate.intent import extract_case_no  # noqa: E402
 
 OUT = Path("results/e6")
+
+
+def _case_data_source() -> str:
+    """返回 case_registry 的主导 data_source（逗号分隔多源）。"""
+    s = get_settings()
+    try:
+        with sqlite3.connect(s.db_path) as c:
+            rows = c.execute(
+                "select data_source,count(*) from case_registry group by 1 "
+                "order by 2 desc").fetchall()
+    except Exception:
+        return "EMPTY"
+    return ",".join(r[0] for r in rows) if rows else "EMPTY"
 
 
 def claimed_cause_of(item: dict) -> str | None:
@@ -97,20 +115,33 @@ def run(limit: int | None = None) -> dict:
     OUT.mkdir(parents=True, exist_ok=True)
     eio.write_jsonl(recs, OUT / "records.jsonl", overwrite=True)
     eio.write_json(prf, OUT / "prf.json")
+    case_src = _case_data_source()
+    is_synthetic = (case_src == "SYNTHETIC")
+    data_caveat = (
+        "案号库为合成数据（SYNTHETIC）；指标仅反映核验器判别能力，"
+        "不代表对真实裁判文书库的覆盖。"
+        if is_synthetic else
+        f"案号库为真实裁判文书（data_source={case_src}）；V1/V3 的『真实』"
+        "即对应真实案件。但本实验仍无法测量『库里没有但确实存在』的假阴性——"
+        "需要额外的真实案号抽样才能补充该指标。")
+    construct_caveat = (
+        "**满分结果含构造成分，必须打折解读**：基准集的 V1–V4 四个子类"
+        "正是按核验器的四级判定（核验通过 / 不存在 / 案由不符 / 格式非法）"
+        "生成，两者一一对应，故 P=R=1.0 在构造上是可预期的。本实验能支持的"
+        "结论是：**四级判定的实现与设计一致、对四类输入的分流无混淆**"
+        "（例如不会把格式非法误判为『不存在』，也不会把案由不符漏放）；"
+        + ("不能据此推断对真实裁判文书网的核验准确率。"
+           "真实场景的困难在于『库里没有但确实存在』的假阴性，"
+           "本合成库无法测量该误差——这一点须在论文限制章节明确写出。"
+           if is_synthetic else
+           "当前已为真实文书库，但『库里没有但确实存在』的假阴性仍不在本实验覆盖范围内——"
+           "须以真实案号抽样补充该指标。这一点须在论文限制章节明确写出。"))
     conf = {"labels": LEVELS, "subtypes": subtypes, "matrix": matrix,
             "by_subtype": by_sub,
             "n": len(recs),
-            "data_caveat": ("案号库为合成数据（SYNTHETIC）；指标仅反映核验器判别能力，"
-                            "不代表对真实裁判文书库的覆盖。"),
-            "construct_caveat": (
-                "**满分结果含构造成分，必须打折解读**：基准集的 V1–V4 四个子类"
-                "正是按核验器的四级判定（核验通过 / 不存在 / 案由不符 / 格式非法）"
-                "生成，两者一一对应，故 P=R=1.0 在构造上是可预期的。本实验能支持的"
-                "结论是：**四级判定的实现与设计一致、对四类输入的分流无混淆**"
-                "（例如不会把格式非法误判为『不存在』，也不会把案由不符漏放）；"
-                "不能据此推断对真实裁判文书网的核验准确率。"
-                "真实场景的困难在于『库里没有但确实存在』的假阴性，"
-                "本合成库无法测量该误差——这一点须在论文限制章节明确写出。")}
+            "case_data_source": case_src,
+            "data_caveat": data_caveat,
+            "construct_caveat": construct_caveat}
     eio.write_json(conf, OUT / "confusion.json")
 
     # 出图

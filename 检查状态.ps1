@@ -116,8 +116,9 @@ $files = @(
     @('知识库 SQLite', 'data\kb\legal_facts.db'),
     @('向量库 chroma', 'data\kb\chroma\chroma.sqlite3'),
     @('评测集总分片', 'data\benchmark\test_e1.jsonl'),
-    @('因果模型 fuzi', 'models\fuzi-mingcha-v1_0\pytorch_model.bin.index.json'),
-    @('fuzi 词表', 'models\fuzi-mingcha-v1_0\ice_text.model'),
+    @('Qwen3-4B 索引', 'models\Qwen3-4B\model.safetensors.index.json'),
+    @('Qwen3-4B 配置', 'models\Qwen3-4B\config.json'),
+    @('兜底 fuzi 索引', 'models\fuzi-mingcha-v1_0\pytorch_model.bin.index.json'),
     @('向量模型 bge', 'models\bge-small-zh-v1.5\config.json'),
     @('桶级阈值', 'configs\thresholds.json')
 )

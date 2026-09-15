@@ -22,23 +22,30 @@
 
 **口径基准**：
 - 硬件：CPU-only / 18 逻辑核 / 无 CUDA / torch 2.11.0+cpu
-- 回答模型：**DeepSeek 官方 API 的 `deepseek-v4-flash`**（服务端回报 `model=deepseek-flash`，地址
-  `https://api.deepseek.com`，密钥在仓库根 `.env` 的 `DEEPSEEK_API_KEY`，**不提交/不外传**），
-  由 `configs/base.yaml: llm_backend: deepseek` + `deepseek_model` 指定（见 **D30**）；
-  **关思考模式**（`LAWGATE_LLM_THINKING` 默认空=关），单条 192 token 实测约 **1–3 s**，
-  命中内容缓存 ≈0.05 s；真机自检 `scripts/check_deepseek.py --live` 全通过。
-- **门控草稿来源**：默认**本机 Qwen2.5-0.5B**（本机 HF 缓存快照，实测约 1.5–3 s），
-  链为 local → api → 确定性伪分布，来源写进 `trace.draft_source` / `draft_attempts`（D30-2）。
-- 离线兜底模型：**`models/fuzi-mingcha-v1_0`（夫子·明察，ChatGLM-6B 底座，6.7B，fp16/CPU）**，
-  由 `configs/base.yaml: causal_model` 显式指定（见 **D29**）；用 `启动服务.ps1 -LlmBackend hf`
-  或 `$env:LAWGATE_LLM_PROVIDER="hf"` 才生效，实测约 1 token/s、常驻约 12.5 GB，
+- **回答模型（现行默认）**：**本机权重 `models/Qwen3-4B`**（= **魔搭社区的 `Qwen/Qwen3-4B`**，约 4B，
+  fp16/CPU，**2026-09-13 起为默认**），由 `configs/base.yaml: llm_backend: hf` + `causal_model` 指定
+  （见 **D38**）；权重经 `scripts/download_modelscope.py` 从魔搭拉取（本机 HF 不可达，D0）。
+  切云端 API：`启动服务.ps1 -LlmBackend deepseek`，即 **D30** 的 `deepseek-v4-flash`（服务端回报
+  `model=deepseek-flash`，地址 `https://api.deepseek.com`，密钥在仓库根 `.env` 的
+  `DEEPSEEK_API_KEY`，**不提交/不外传**；关思考模式，单条 192 token 实测约 **1–3 s**，
+  命中内容缓存 ≈0.05 s；真机自检 `scripts/check_deepseek.py --live` 全通过）。
+- **门控草稿来源**：**回答模型走本地时，草稿复用回答模型本身**（`answer_model` 来源，
+  手册 S3.5 原设计：共享模型与前缀，prefill 不翻倍）——所以现行配置下草稿就是
+  `models/Qwen3-4B`，`base.yaml: draft_model` 与之同值（**D38**）。只有回答切成 API 时才启用
+  来源链 local → api → 确定性伪分布，来源写进 `trace.draft_source` / `draft_attempts`（D30-2）。
+  ⚠ **D30 那组"本机 0.5B 草稿 u 有量级差异（0.016/0.026/0.363/0.079）"的实测不再代表现行尺度**，
+  见下面 τ_b 一条。
+- 降级兜底模型：**`models/fuzi-mingcha-v1_0`（夫子·明察，ChatGLM-6B 底座，6.7B，fp16/CPU）**，
+  由 `configs/base.yaml` 的候选链自动选中（见 **D29**）；实测约 1 token/s、常驻约 12.5 GB，
   `scripts/check_fuzi_e2e.py` 13/13 通过（**验的是这条兜底路径，不是默认路径**）。
-  **注意**：早期的 pilot/timing 与 E0 门控信号采集是在 **0.5B**、E1 主实验是在 **1.5B**
-  上完成的，与本配置的模型口径不一致（**D21**、**D29**），这几组数字不可并列陈述。
-- **τ_b 已按新草稿源重校准**（2026-09-12，D33-3）：`configs/thresholds.json` = b1 0.29 / b2 1.0 /
+  **注意**：早期的 pilot/timing 与 E0 门控信号采集是在 **0.5B**、E1 主实验是在 **1.5B**、
+  E1–E5 主结果是"回答走 API + 0.5B 草稿"口径上完成的，与本配置的模型口径不一致
+  （**D21**、**D29**、**D33**、**D38**），这几组数字不可并列陈述。
+- **τ_b 是 0.5B 草稿口径下校准的**（2026-09-12，D33-3）：`configs/thresholds.json` = b1 0.29 / b2 1.0 /
   b3 1.0 / **b4 1.0**（`dev_calib` 144 条、新口径 dev 基线重跑后校准、`largest_feasible`、`grid_max=1.0`；
   b1 仍 `feasible:false` → 0.29 为兜底值，D13 口径披露）。TARG 基线按 D33-4 报**双臂**
-  （手册 τ=0.10 + 调参 τ*=0.01）。更换回答/草稿后端后须重走"看 u 分布 → 重校准"流程。
+  （手册 τ=0.10 + 调参 τ*=0.01）。**草稿换成 Qwen3-4B 后 u 的分布尺度必然会变，重跑 E1/E2 前
+  必须先看一遍新 u 的分布、再决定是否重新校准**（**D38**）。
 - **E1–E5 实验口径（D33）**：`max_tokens=192` 全实验统一；E1 = **test 全量 944**、E2 = test_e1 300（D24）、
   E3 = test_e4 60（D19）、E5 = temporal_trap 120。全部结果经 **D34 判分修复**后统一离线重判
   （原件备份 `results/_prescore_backup/`，翻转台账 `docs/rescore_report_round1.md` / `docs/rescore_report.md`）。
@@ -114,9 +121,9 @@
 | 验收项 | 判定 | 依据 / 产物 | 说明 |
 |---|---|---|---|
 | FastAPI 服务 | ✅ | `lawgate/api/app.py` | `/chat`、`/verify_case`、`/temporal`、`/health` 等接口完整 |
-| 流式输出（SSE） | ✅ | `POST /chat/stream`；`scripts/check_stream.py` → `docs/check_stream.txt`（离线可复跑）；**本地兜底后端复核**：`scripts/check_fuzi_e2e.py`（需 `$env:LAWGATE_LLM_PROVIDER="hf"`）→ `docs/fuzi_e2e.txt`；**真机流式冒烟 `scripts/smoke_stream.py` → `docs/smoke_stream.md` / `docs/smoke_stream_http.md` 已于 2026-09-16 删除（D37），其结论留档于 D28/D30** | `stage`* → `delta`* → `done`[→`error`]；离线自检（秒级）通过；期间查出并修复通道 B 的 sqlite 跨线程缺陷（D28）；**D29 接入本地 6.7B 司法模型后复测：流式 `delta` 拼接与 `done.answer` 逐字一致、同问二轮缓存 0.0 s**；**D30 换成 DeepSeek API 后复测**：流式 38 片 1.08 s 且与整段一致，HTTP 分片 169 片、跨度 922 ms（API 后端下逐片判据"≥5 片且首末片跨度 ≥50 ms"，本地后端仍走老规则；该断言原由已删的 smoke_stream.py 承担，现留档为历史记录） |
-| 最终回答模型（默认可核验） | ✅ | `scripts/check_backend.py` → 按服务形态分行打印；`GET /health` 的 `llm` 块 | **默认：DeepSeek API 的 `deepseek-v4-flash`**（`llm_backend: deepseek`，关思考，单条 192 token ≈1–3 s，缓存命中 ≈0.05 s）；`/health.llm` 给出 provider/model/api_base/thinking/key_present/draft_source/draft_model；**离线兜底**：`启动服务.ps1 -LlmBackend hf` → `models/fuzi-mingcha-v1_0`（约 1 token/s，192 token 单栏 2–4 分钟，D29） |
-| 门控草稿来源可解释 | ✅ | `trace.draft_source` / `trace.draft_attempts` / `trace.draft_seconds`；`GET /trace/schema` 有字段说明；UI Trace 面板新增"草稿来源""草稿耗时"两行；对照实测 `docs/check_deepseek_gate.txt` | 回答模型与门控草稿**不再必然同源**（D30）：默认链 **本机 Qwen2.5-0.5B → API logprobs → 确定性伪分布**，取值 `api` / `local` / `rule`，通道 B 时为 `channel_b（未取草稿）`；每次尝试的来源、失败原因与耗时逐条留痕。实测 API 草稿的 u 塌缩到 **0.0000–0.0012**（无区分度），本机 0.5B 草稿为 0.016 / 0.026 / **0.363** / 0.079，故默认用本机 0.5B |
+| 流式输出（SSE） | ✅ | `POST /chat/stream`；`scripts/check_stream.py` → `docs/check_stream.txt`（离线可复跑）；**本地后端（现行默认）复核**：`scripts/check_fuzi_e2e.py`（本地后端，D38 起为默认形态）→ `docs/fuzi_e2e.txt`；**真机流式冒烟 `scripts/smoke_stream.py` → `docs/smoke_stream.md` / `docs/smoke_stream_http.md` 已于 2026-09-16 删除（D37），其结论留档于 D28/D30** | `stage`* → `delta`* → `done`[→`error`]；离线自检（秒级）通过；期间查出并修复通道 B 的 sqlite 跨线程缺陷（D28）；**D29 接入本地 6.7B 司法模型后复测：流式 `delta` 拼接与 `done.answer` 逐字一致、同问二轮缓存 0.0 s**；**D30 换成 DeepSeek API 后复测**：流式 38 片 1.08 s 且与整段一致，HTTP 分片 169 片、跨度 922 ms（API 后端下逐片判据"≥5 片且首末片跨度 ≥50 ms"，本地后端仍走老规则；该断言原由已删的 smoke_stream.py 承担，现留档为历史记录） |
+| 最终回答模型（默认可核验） | ✅ | `scripts/check_backend.py` → 按服务形态分行打印；`GET /health` 的 `llm` 块 | **现行默认：本机权重 `models/Qwen3-4B`**（= 魔搭 `Qwen/Qwen3-4B`，fp16/CPU，`llm_backend: hf`，D38；**纯离线**，单条 192 token 需数十秒量级、首次加载 1–3 分钟，缓存命中 ≈0.05 s）；`/health.llm` 给出 provider/model/dtype/来源/draft_source/draft_model；**可选加速**：`启动服务.ps1 -LlmBackend deepseek` → API `deepseek-v4-flash`（关思考，单条 1–3 s，D30）；**降级兜底**：`models/fuzi-mingcha-v1_0`（约 1 token/s，192 token 单栏 2–4 分钟，D29） |
+| 门控草稿来源可解释 | ✅ | `trace.draft_source` / `trace.draft_attempts` / `trace.draft_seconds`；`GET /trace/schema` 有字段说明；UI Trace 面板新增"草稿来源""草稿耗时"两行；对照实测 `docs/check_deepseek_gate.txt`；现行口径实测见 `docs/check_draft_u.txt` | **现行默认（D38）回答模型与门控草稿同源**：回答走本地时草稿直接复用回答模型本身（来源名 `answer_model`，手册 S3.5 原设计，共享前缀、prefill 不翻倍）。**只有把回答切到 API 时**才启用来源链 **本机草稿 → API logprobs → 确定性伪分布**，取值 `api` / `local` / `rule`，通道 B 时为 `channel_b（未取草稿）`；每次尝试的来源、失败原因与耗时逐条留痕。实测（旧口径）API 草稿的 u 塌缩到 **0.0000–0.0012**（无区分度），本机 0.5B 草稿为 0.016 / 0.026 / **0.363** / 0.079，故来源链默认取本机草稿 |
 | Gradio 双栏演示 | ✅ | `lawgate/api/ui.py` | 双栏 + Trace 面板 + 6 个预设按钮；两栏**同时流式**（`respond_stream`，左栏后台线程 + 队列），且**两栏生成长度上限统一为 192 token**（`-UiMaxTokens` / `LAWGATE_UI_MAXTOK`；见 D28-3，离线 §5 与真机 §F 各有一道断言） |
 | 30 秒视频 | ⚠️ | `video/lawgate_demo.mp4`（**实测 58.0 s**，1280×720，30 fps，2.76 MB，ffprobe 复核） | **已有演示短片但非严格 30 s**：PIL 逐帧渲染（`scripts/make_demo_video.py`），内容全部取自仓库真实产物（README 定位/架构、2026-09-11 冒烟 20/20、`configs/base.yaml`）；2026-09-11 生成，早于 D33 新口径实验数字，片中不含实验结论。如需严格 30 s 可调分镜时长重渲染或对现有片裁剪（**不复制成"30s.mp4"以免命名与实际时长不符**） |
 | 软著材料 | ❌ | 无受理通知书 | 未提交（G5） |
@@ -140,7 +147,7 @@
 | E1 准确率 | ≥ Always-RAG − 1% | **0.6144 vs 0.5551（+5.93pp）**，配对 Wilcoxon p=0.00205 显著更优（`results/e1/stats.json`） | ✅ 满足（超出目标） |
 | E5 通道 B TVC（T1–T3） | = 1.0 | **0.9333**（T1 1.0 / T2 0.8667 / T3 0.8667 / T4 1.0；vs alwaysrag 0.35） | ⚠️ 未达 1.0，残余 8 条失败原因见 S5/S6 表 |
 | E6 P / R | ≥0.95 | 1.0（合成库） | ✅ 满足（构造性） |
-| 单轮延迟 P95 | 记录实测值 | 18.9 s（128 token，CPU-only，**本地权重后端**）；**当前默认后端（DeepSeek API）单条 192 token 实测 1–3 s、缓存命中 ≈0.05 s**（D30） | ✅ 已记录 |
+| 单轮延迟 P95 | 记录实测值 | 18.9 s（128 token，CPU-only，**本地权重后端**）；历史的本地 6.7B 单栏 192 token 约 2–4 分钟（D29）；DeepSeek API 模式单条 192 token 实测 1–3 s、缓存命中 ≈0.05 s（D30）；**现行默认（本机 Qwen3-4B）的分段实测见 D38** | ✅ 已记录 |
 
 ---
 
@@ -165,14 +172,17 @@
 2. **E0 红灯 + hybrid 路由的决策链完整**：神经不确定性信号在法律域的汇总判别力不足，但分桶后 b2 有效；项目据此切换为 hybrid 并在代码中完整实现。
 3. **案号核验器在合成数据上达到 100% 四级判定**：但**必须同时披露**“本库为合成数据，不代表真实裁判文书网覆盖能力”。
 4. **评测集构建流水线可复现**：1180 条、分层划分、κ 流水线、校准脚本全部可用。
-5. **系统在 CPU-only 条件下端到端可运行（默认回答在云端 API，本机跑门控与检索）**：延迟、缓存、
-   降级链路均经过实测；最终回答默认由 **DeepSeek 官方 API 的 `deepseek-v4-flash`** 生成
+5. **系统在 CPU-only 条件下端到端可运行（回答模型也在本机）**：延迟、缓存、
+   降级链路均经过实测；**现行默认回答模型是本机权重 `models/Qwen3-4B`（魔搭 `Qwen/Qwen3-4B`，fp16/CPU，D38）**，
+   门控草稿与它**是同一份权重**（手册 S3.5，共享模型与前缀，不额外加载）；
+   切云端 API 时回答由 **DeepSeek 官方 API 的 `deepseek-v4-flash`** 生成
    （关思考，单条 192 token 约 1–3 s，`scripts/check_deepseek.py` 离线 **29/29**、真机全通过，D30），
-   门控草稿来自本机 Qwen2.5-0.5B 并逐条写进 `trace.draft_source`；
-   **离线兜底**为 `models/fuzi-mingcha-v1_0`（fp16/CPU，`启动服务.ps1 -LlmBackend hf` 切回，
-   `scripts/check_fuzi_e2e.py` **13/13 通过**，D29），兜底路径代价是约 1 token/s。
-   ~~τ_b 未按新草稿源重新校准~~ → **已由 D33-3 重校准解除**（2026-09-12：b1 0.29 / b2–b4 1.0，
-   `dev_calib` 144 条、`largest_feasible`；更换回答/草稿后端后仍须重走"看 u 分布 → 重校准"流程）。
+   该模式下的草稿来自本机草稿模型并逐条写进 `trace.draft_source`；
+   **降级兜底**为 `models/fuzi-mingcha-v1_0`（fp16/CPU，候选链自动选中，
+   `scripts/check_fuzi_e2e.py` **13/13 通过**，D29），代价是约 1 token/s。
+   τ_b 已由 D33-3 重校准（2026-09-12：b1 0.29 / b2–b4 1.0，`dev_calib` 144 条、`largest_feasible`），
+   但那是 **0.5B 草稿口径**；**草稿换成 Qwen3-4B 后 u 的尺度变了，重跑 E1/E2 前须先看新 u 分布
+   再决定是否重新校准**（D38）。
 6. **核心断言已成立（D33/D34，2026-09-12/13）**：test 全量 944 上，检索降 **91%**
    （RR 0.09 vs 1.0）且 acc **0.6144 显著优于** Always-RAG 0.5551（Wilcoxon p=0.00205、
    Holm 拒绝）；TARG 双臂（τ=0.10 / τ*=0.01）与 complexity、legal_llm 均被显著超过或无显著差异。

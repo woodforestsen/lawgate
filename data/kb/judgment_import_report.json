@@ -1,18 +1,17 @@
 {
-  "date": "2026-09-10",
-  "src": "data\\_tmp_j",
-  "n_files": 1,
-  "imported": 1,
+  "date": "2026-09-13",
+  "src": "data\\judgments",
+  "n_files": 1610,
+  "imported": 1610,
   "skipped_no_case_no": 0,
-  "dry_run": true,
+  "dry_run": false,
   "causes": {
-    "民间借贷纠纷": 1
+    "劳动争议": 500,
+    "房屋租赁合同纠纷": 500,
+    "民间借贷纠纷": 500,
+    "离婚纠纷": 110
   },
-  "missing_causes": [
-    "劳动争议",
-    "离婚纠纷",
-    "房屋租赁合同纠纷"
-  ],
+  "missing_causes": [],
   "bad_examples": [],
   "next_steps": [
     "重跑 python -m lawgate.knowledge.build_vector（重建向量库）",

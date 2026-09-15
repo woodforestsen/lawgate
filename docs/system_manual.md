@@ -95,28 +95,40 @@ CA-LegalGate 是一套**免训练（training-free）**的中文法律问答系�
 
 | 用途 | 实际使用 | 解析顺序 |
 |---|---|---|
-| 因果语言模型（**最终回答**，默认） | **DeepSeek 官方 API 的 `deepseek-v4-flash`**（服务端回报 `model=deepseek-flash`；地址 `https://api.deepseek.com`，**关闭思考模式**，单条 192 token 约 **1–3 s**） | `configs/base.yaml: llm_backend: deepseek` + `deepseek_model`（见 D30）；密钥只从环境变量 / 仓库根 `.env` 的 `DEEPSEEK_API_KEY` 读取，**代码与配置从不写明文** |
-| 本地兜底模型（离线 / 无密钥时） | `models/fuzi-mingcha-v1_0`（夫子·明察，ChatGLM-6B 底座，6.7B，CPU fp16） | `configs/base.yaml: causal_model` **显式指定**（避免口径漂移，见 D29）；`启动服务.ps1 -LlmBackend hf` 或 `$env:LAWGATE_LLM_PROVIDER="hf"` 时生效；留空则 `config.py: CAUSAL_MODEL_CANDIDATES` → 本地目录 → HF repo id → 缓存快照 glob |
-| **门控草稿模型**（与回答模型**不同源**，D30） | 本机 `Qwen/Qwen2.5-0.5B-Instruct`（HF 缓存快照；首次提问才加载，约 2 GB） | `configs/base.yaml: draft_source: auto` 决定来源链（local → api → rule）；`LAWGATE_DRAFT_SOURCE` / `LAWGATE_DRAFT_MODEL` 可覆盖；实际路径由 `Settings.draft_model_source` 说明 |
+| 因果语言模型（**最终回答**，现行默认） | **本机权重 `models/Qwen3-4B`**（= 魔搭社区的 `Qwen/Qwen3-4B`，约 4B，标准 transformers 架构，CPU fp16，**2026-09-13 起为默认**） | `configs/base.yaml: llm_backend: hf` + `causal_model: models/Qwen3-4B`（见 **D38**）；权重由 `scripts/download_modelscope.py` 从**魔搭 ModelScope** 拉取（本机 HF 不可达，D0） |
+| 云端 API（可选，更快） | **DeepSeek 官方 API 的 `deepseek-v4-flash`**（服务端回报 `model=deepseek-flash`；地址 `https://api.deepseek.com`，**关闭思考模式**，单条 192 token 约 **1–3 s**） | `启动服务.ps1 -LlmBackend deepseek`（或 `$env:LAWGATE_LLM_PROVIDER="deepseek"`）；`configs/base.yaml: deepseek_model`（见 D30）；密钥只从环境变量 / 仓库根 `.env` 的 `DEEPSEEK_API_KEY` 读取，**代码与配置从不写明文** |
+| 降级兜底模型 | `models/fuzi-mingcha-v1_0`（夫子·明察，ChatGLM-6B 底座，6.7B，CPU fp16，约 1 token/s） | 由 `config.py: CAUSAL_MODEL_CANDIDATES` 的候选链自动选中（`models/Qwen3-4B` → `models/fuzi-mingcha-v1_0` → …，见 D29）；也可用 `$env:LAWGATE_MODEL` 显式指定 |
+| **门控草稿模型** | **与回答模型同一份权重**：回答走本地时 `build_draft_source()` 直接把草稿接到回答模型本身（`answer_model` 来源，手册 S3.5：共享模型与前缀，prefill 不翻倍），现行即 `models/Qwen3-4B`（**D38**）；回答切成 API 时才另加载 `base.yaml: draft_model` | `configs/base.yaml: draft_model` / `draft_source`；`LAWGATE_DRAFT_SOURCE` / `LAWGATE_DRAFT_MODEL` 可覆盖；实际路径由 `Settings.draft_model_source` 说明 |
 | 向量编码模型 | `BAAI/bge-small-zh-v1.5`（`models/bge-small-zh-v1.5`，**512 维**，手册指定模型） | `config.py: EMBED_MODEL_CANDIDATES` |
 
-> **口径提示（D21 / D29 / D30）**：本机历史上先后用过 0.5B（HF 缓存快照）与 1.5B 作回答模型，
-> 再换成 6.7B 本地司法模型，**现在 6.7B 只作离线兜底**，默认回答由 DeepSeek API 产生。
+> **口径提示（D21 / D29 / D30 / D38）**：本机历史上先后用过 0.5B（HF 缓存快照）与 1.5B 作回答模型，
+> 再换成 6.7B 本地司法模型（D29），又切到 DeepSeek API（D30），
+> **现在默认回到本机权重、并换成 4B 的 `models/Qwen3-4B`（D38）**；
+> 6.7B 的 fuzi-mingcha 仍在库内，按候选链降级为兜底。
 > 引用历史结果时必须注明其模型口径。
 > 秒级确认"最终是谁在回答、草稿从哪来"：`E:\Anaconda\python.exe scripts\check_backend.py`
 > （按服务形态分行打印）；服务在跑时看 `GET /health` 的 `llm` 块。
 
-可用环境变量覆盖：`LAWGATE_MODEL`、`LAWGATE_EMBED`、`LAWGATE_DTYPE`（本地兜底模型），
+可用环境变量覆盖：`LAWGATE_MODEL`、`LAWGATE_EMBED`、`LAWGATE_DTYPE`、`LAWGATE_LOCAL_THINKING`（本地模型），
 `LAWGATE_LLM_PROVIDER`（服务形态）、`LAWGATE_DRAFT_SOURCE`、`LAWGATE_DRAFT_MODEL`、
 `LAWGATE_LLM_THINKING`、`LAWGATE_LLM_TIMEOUT`、`LAWGATE_LLM_RETRIES`、`LAWGATE_DOTENV`（详见 §2.3）。
-可用 `configs/base.yaml` 覆盖：`causal_model` / `dtype` / `llm_backend` / `deepseek_model` / `draft_source` /
-`device` / `load_in_4bit` / `k_draft` / `signal` / `max_new_tokens` / `seeds` / `allow_network`。
+可用 `configs/base.yaml` 覆盖：`causal_model` / `draft_model` / `dtype` / `local_thinking` / `llm_backend` /
+`deepseek_model` / `draft_source` / `device` / `load_in_4bit` / `k_draft` / `signal` / `max_new_tokens` /
+`seeds` / `allow_network`。
 
-> `dtype` 说明：`auto` 在 CPU 上落 fp32；**6.7B 级本地兜底模型必须显式 `float16`**（fp32 要约 27 GB）。
-> ChatGLM 系（旧版远程代码）的加载由 `lawgate/compat_chatglm.py` 统一处理（中文路径的
-> sentencepiece、旧 tokenizer `_pad`、`GenerationMixin`、KV cache 桥接等，见 D29）。
+> `dtype` 说明：`auto` 在 CPU 上落 fp32；**本地权重必须显式 `float16`**
+> （Qwen3-4B 约 4B 参数：fp32 要约 16 GB，fp16 约 8 GB；旧的 6.7B 兜底更极端，fp32 要约 27 GB）。
+> `local_thinking` 说明（D38）：Qwen3 的 chat template 判定是
+> `{%- if enable_thinking is defined and enable_thinking is false %}`——**不传这个变量 = 开思考**。
+> 开着思考时模型先写一大段 `<think>…</think>`，`max_new_tokens=192` 很可能被 reasoning 吃光，
+> 正文变空或截断（与 D30 在 DeepSeek API 上的陷阱同款）。故 `base.yaml` 显式写 `local_thinking: false`，
+> `HFLLM` 只在模板确实引用该变量时才传参（`llm_thinking_supported` 会写进 `/health` 与溯源）。
+> Qwen3 是标准架构（`AutoModelForCausalLM` + `apply_chat_template`），**不走** ChatGLM 兼容层；
+> ChatGLM 系（旧版远程代码，如 fuzi-mingcha）的加载由 `lawgate/compat_chatglm.py` 统一处理
+> （中文路径的 sentencepiece、旧 tokenizer `_pad`、`GenerationMixin`、KV cache 桥接等，见 D29）。
 > `allow_network` 说明：该开关**只约束 HuggingFace 权重下载**（本环境对 HF 有中间层劫持，D0），
 > **不是"禁止一切运行时联网"**——DeepSeek API 调用是设计内的网络行为，走不走由 `llm_backend` 决定。
+> 现行默认（本机 Qwen3-4B）**全程离线**，压根不发网络请求。
 
 ### 2.3 环境变量与 `.env`（D30 起 `.env` 真的被代码读取）
 
@@ -137,12 +149,13 @@ $env:HF_HUB_OFFLINE         = "1"      # huggingface_hub(httpx) 证书校验失�
 | `DEEPSEEK_API_KEY` | DeepSeek 密钥（**只存在于 `.env` 与环境变量中；`.env` 已 `gitignore`**） | 缺失 → 调用 401，报错写明去查 `.env` |
 | `DEEPSEEK_BASE_URL` | API 地址 | `https://api.deepseek.com` |
 | `DEEPSEEK_MODEL` | 回答模型名（等价于 `base.yaml: deepseek_model`） | `deepseek-v4-flash` |
-| `LAWGATE_LLM_PROVIDER` | 服务形态：`deepseek` / `hf` / `rule`（**覆盖** `base.yaml: llm_backend`） | 按 `llm_backend`（当前 `deepseek`） |
-| `LAWGATE_LLM_THINKING` | 思考模式：留空/`0` = **关**（默认，正文非空且快）；`1` = 开 | 关 |
+| `LAWGATE_LLM_PROVIDER` | 服务形态：`deepseek` / `hf` / `rule`（**覆盖** `base.yaml: llm_backend`） | 按 `llm_backend`（当前 `hf`，即本机权重） |
+| `LAWGATE_LLM_THINKING` | **API 回答的**思考模式：留空/`0` = **关**（默认，正文非空且快）；`1` = 开 | 关 |
+| `LAWGATE_LOCAL_THINKING` | **本机权重的**思考模式：留空/`0` = **关**（默认）；`1` = 开。⚠ Qwen3 模板不传该开关 = 开思考，会把 192 token 吃在 `<think>` 上（D38） | 关 |
 | `LAWGATE_LLM_TIMEOUT` | 单次请求超时（秒） | `120` |
 | `LAWGATE_LLM_RETRIES` | 失败重试次数（仅 429 / 5xx / 超时重试） | `3` |
-| `LAWGATE_DRAFT_SOURCE` | 门控草稿来源：`auto` / `local` / `api` / `none` | `auto`（local → api → rule） |
-| `LAWGATE_DRAFT_MODEL` | 草稿模型路径；设 `none` = 不加载任何本地草稿模型 | 自动挑 Qwen2.5-0.5B |
+| `LAWGATE_DRAFT_SOURCE` | 门控草稿来源：`auto` / `local` / `api` / `none` | `auto`（回答走本地时草稿复用回答模型；走 API 时 local → api → rule） |
+| `LAWGATE_DRAFT_MODEL` | 草稿模型路径；设 `none` = 不加载任何本地草稿模型 | 自动挑 `models/Qwen3-4B` |
 | `LAWGATE_DOTENV` | 设 `0` = **完全不读 `.env`**（复现"无密钥时的降级行为"用） | `1` |
 
 > **优先级：真实环境变量 > `.env`**（已存在的变量绝不被覆盖）。因此命令行、启动脚本
@@ -255,22 +268,28 @@ python -m lawgate.api.app --port 8000               # FastAPI（/docs 交互文�
 
 | 项 | 说明 |
 |---|---|
-| 职责 | 为门控取前 k 个 token 的 logprob 分布。**历史上"复用同一个 LLM 后端"以避免 prefill 翻倍；D30 之后必须换源**（见下） |
+| 职责 | 为门控取前 k 个 token 的 logprob 分布。**先确认它与回答模型是否同源**——现行配置下就是同一份权重（见下） |
 | 关键类 | `DraftGenerator(llm=None, model_path=None, k=20)` |
 | 关键方法 | `draft_logprobs(query, history, k)`、`draft_top1()`（兼容手册签名的 `[(logprob, token), ...]`）、`describe()` |
 | 输出 | `lawgate.channel.llm_base.DraftStats(logprobs, tokens, text, seconds, cached, source, attempts)` |
 
-**草稿与回答不再必然同源（D30，本手册 S3.5 的原始假设已失效）**
+**现行默认下草稿与回答是同源；只有回答切 API 后才需要换源（D38 / D30）**
 
-回答模型换成 DeepSeek API 后，"回答模型自己给 logprobs"这条路不成立：
+现行默认 `llm_backend: hf`（回答 = 本机 `models/Qwen3-4B`）时，草稿**就是回答模型本身**：
+`build_draft_source()` 见到"回答模型不是 API"就直接返回 `answer_model` 单源链
+（手册 S3.5 的原始设计：草稿与正式生成共享同一模型与前缀，prefill 成本不翻倍）。
+所以现行配置**没有"额外再加载一个草稿模型"这笔开销**，`base.yaml: draft_model` 只是让
+`/health`、图注、页脚与实际一致（**D38**）。
+
+回答模型换成 DeepSeek API 后（`-LlmBackend deepseek`），"回答模型自己给 logprobs"这条路不成立：
 API 的 logprobs **只在思考模式下是真实分布**，而思考模式下拿到的只是**套路化推理前缀**
 （"我们需要回答用户…"）的分布——实测平均裕度 top1−top2 ≈ **9–11 nats**，
 算出的 u = exp(−裕度) 全挤在 **0.0000–0.0012**，门控信号失去区分度。
-因此草稿改由 `lawgate/channel/draft_source.py: DraftSourceChain` 按**来源链**提供：
+因此**该模式下**草稿改由 `lawgate/channel/draft_source.py: DraftSourceChain` 按**来源链**提供：
 
 | 顺序 | 来源（`trace.draft_source`） | 实现 | 实测 |
 |---|---|---|---|
-| 1 | `local`（**默认先走这条**） | 本机 `Qwen/Qwen2.5-0.5B-Instruct`（HF 缓存快照，惰性加载） | 约 1.5–3 s；u 有量级差异：0.016 / 0.026 / **0.363** / 0.079 |
+| 1 | `local`（**该模式下默认先走这条**） | `base.yaml: draft_model`（现行 = `models/Qwen3-4B`，惰性加载，约 8 GB） | 历史上用 0.5B 时 u 有量级差异（0.016 / 0.026 / **0.363** / 0.079）；**换 4B 后尺度会变，须重新看分布**（D38） |
 | 2 | `api` | `DeepSeekLLM.draft_logprobs()`：强制思考模式 + logprobs，并做**退化分布检测**（选中 token 全 0.0 或候选过半为 −9999 → 抛 `DegenerateLogprobs` 换源） | u 塌缩到 0.0000–0.0012，故不作默认 |
 | 3 | `rule` | `ExtractiveLLM` 的词面构造伪分布 | **只是让链路跑通**，不是语言模型信号 |
 
@@ -278,11 +297,17 @@ API 的 logprobs **只在思考模式下是真实分布**，而思考模式下�
 （通道 B 走查库拼装、未取草稿时记 `channel_b（未取草稿）`），
 开关为 `configs/base.yaml: draft_source` 或 `LAWGATE_DRAFT_SOURCE`，草稿模型路径为 `LAWGATE_DRAFT_MODEL`。
 
-> ⚠️ **阈值口径（重要偏差）**：`configs/thresholds.json` 的 τ_b 是在**更早的草稿模型**上校准的，
-> 换源后**尚未重新校准**。对 LegalGate 默认 hybrid 路由**无影响**（b1/b3/b4 用确定性复杂度评分，
-> b2 的 τ=1.0 本来就不可超越），但 **TARG 基线（单阈值 τ=0.10）会受影响**——
-> **重跑 E1/E2 前必须先看 u 分布**：`E:\Anaconda\python.exe scripts\check_deepseek.py --live --with-local-draft`
-> （产物 `docs/check_deepseek_gate.txt`）。历史 E0–E6 结果与本次配置**不可直接比较**。
+> ⚠️ **阈值口径（重要偏差）**：`configs/thresholds.json` 的 τ_b 是在 **0.5B 草稿**上校准的
+> （D33-3），**换成 `models/Qwen3-4B` 后尚未重新校准**。对 LegalGate 默认 hybrid 路由**无影响**
+> （b1/b3/b4 用确定性复杂度评分，b2 的 τ=1.0 本来就不可超越），但 **TARG 基线（单阈值 τ=0.10）
+> 会受影响**——**重跑 E1/E2 前必须先看 u 分布**：
+
+```powershell
+E:\Anaconda\python.exe scripts\check_draft_u.py --out docs\check_draft_u.txt
+# 走产品里那条真实草稿链，对固定问题集打印 u / 平均裕度 / 草稿源 / 耗时，并落 Markdown 表（D38）
+```
+
+> 历史 E0–E6 结果与现行配置（4B 回答 + 4B 草稿）**不可直接比较**。
 
 ### 3.5 `lawgate/gate/signal.py` —— 不确定性信号
 
@@ -403,15 +428,15 @@ system + history + 当前问题，`HFLLM.build_prompt()` 优先用
 `DeepSeekLLM` 没有 tokenizer（API 直接吃 `messages` 数组），因此缓存键里的 "prompt" 是
 **messages 的 JSON 序列化**；人设类基线改走 `generate_messages()`（见 §8.2 的 D30-3c）。
 
-**降级链（D30 后顺序有变）**：`prefer="auto"` 时先看 `Settings.llm_provider / llm_backend`，
-它是 `deepseek` 就**先用 API**，网络/鉴权失败才逐级降级到本地后端：
+**降级链（D38 起顺序回到"本地优先"）**：`prefer="auto"` 时先看 `Settings.llm_provider / llm_backend`：
 
 ```
-DeepSeekLLM ──失败──▶ HFLLM ──失败──▶ VLLMLLM ──失败──▶ ExtractiveLLM（规则兜底）
+（llm_backend: hf，当前默认）  HFLLM ──失败──▶ VLLMLLM ──失败──▶ ExtractiveLLM（规则兜底）
+（llm_backend: deepseek）      DeepSeekLLM（**直接返回，不降级到本地**，理由见 §8.2）
 ```
 
 显式 `get_llm("deepseek")` 时**不静默换模型**——失败直接把异常抛出去（否则会出现"改了配置却跑出
-另一套结果"）；每次降级的原因都 `print` 到 stdout，详见 §8.2。
+另一套结果"）；本地链每次降级的原因都 `print` 到 stdout，详见 §8.2。
 
 **流式输出**（D28-2）：`generate_stream()` 返回增量文本生成器。
 `HFLLM` 用 `TextIteratorStreamer` + 后台线程真·逐 token（`model.generate(streamer=…)`
@@ -428,9 +453,13 @@ DeepSeekLLM ──失败──▶ HFLLM ──失败──▶ VLLMLLM ──失�
 消费级 GPU + vLLM 下整问约 2–7 s（约 10–30×），首字 0.3–1 s；
 `transformers` 单流路径在 GPU 上仍偏慢，详见 README §1「一"问"到底慢在哪」。
 
-> **当前默认后端（DeepSeek API）的耗时构成完全不同**（D30）：生成只要约 **1 s**，
-> "首字"延迟主要由**取门控草稿**决定（本机 0.5B 约 1.5–3 s；实测 3.3 s 里 2.4 s 是草稿），
-> 检索仍是毫秒级；命中内容缓存则整体 ≈0.05 s。也就是说，本机 GPU 如今能加速的只有草稿那一小段。
+> **现行默认（本机 `models/Qwen3-4B`，fp16/CPU，D38）的耗时构成**：门控草稿与回答模型是
+> **同一份权重**，因此**没有"单独的草稿耗时"这一段**——整条延迟 = 一次 prefill + 逐 token 解码，
+> 分段实测见 `docs/deviations.md` D38；检索仍是毫秒级；命中内容缓存 ≈0.1 s。
+>
+> **D30 的 API 模式**（`-LlmBackend deepseek`）：生成只要约 **1 s**，"首字"延迟主要由
+> **取门控草稿**决定（那段历史里草稿是 0.5B，约 1.5–3 s；实测 3.3 s 里 2.4 s 是草稿），
+> 命中内容缓存整体 ≈0.05 s。
 
 ### 3.13 `lawgate/cache.py` —— 生成缓存
 
@@ -747,18 +776,20 @@ python -m lawgate.api.app --host 127.0.0.1 --port 8000
 {
   "status": "ok",
   "uptime_s": 12.3,
-  "provenance": {"hardware": "...", "device": "cpu", "causal_model": "deepseek-v4-flash",
-                 "causal_model_path": "models/fuzi-mingcha-v1_0", "embed_model": "bge-small-zh-v1.5",
-                 "llm_provider": "deepseek", "llm_api_base": "https://api.deepseek.com",
-                 "llm_api_model": "deepseek-v4-flash", "llm_thinking": false, "has_api_key": true,
-                 "draft_source": "auto", "draft_model": "Qwen/Qwen2.5-0.5B-Instruct",
-                 "llm_backend": "deepseek", "date": "...", "version": "0.1.0"},
+  "provenance": {"hardware": "...", "device": "cpu", "causal_model": "Qwen3-4B",
+                 "causal_model_path": "models/Qwen3-4B", "causal_model_dtype": "float16",
+                 "embed_model": "bge-small-zh-v1.5",
+                 "llm_provider": "local", "llm_api_base": null,
+                 "llm_api_model": null, "llm_thinking": null, "has_api_key": false,
+                 "draft_source": "auto", "draft_model": "Qwen3-4B",
+                 "draft_model_path": "models/Qwen3-4B",
+                 "llm_backend": "hf", "date": "...", "version": "0.1.0"},
   "router_loaded": true,
   "load_error": null,
-  "llm": {"provider": "deepseek", "backend": "deepseek", "model": "deepseek-v4-flash",
-          "api_base": "https://api.deepseek.com", "thinking": false, "key_present": true,
-          "draft_source": "auto", "draft_model": "Qwen/Qwen2.5-0.5B-Instruct",
-          "note": "DeepSeek API 调用需要网络；本字段只反映配置，不发起请求。连通性用 scripts/check_deepseek.py 验。"},
+  "llm": {"provider": "local", "backend": "hf", "model": "Qwen3-4B",
+          "api_base": null, "thinking": null, "key_present": false,
+          "draft_source": "auto", "draft_model": "Qwen3-4B",
+          "note": "本字段只反映配置，不发起任何请求；走 API 时（-LlmBackend deepseek）连通性用 scripts/check_deepseek.py 验。"},
   "cache": {"enabled": true, "by_kind": {...}, "total_entries": 275,
             "total_tokens": 8377, "total_compute_seconds": 2148.6}
 }
@@ -985,12 +1016,16 @@ curl.exe -N -X POST http://127.0.0.1:8010/chat/stream `
 
 | 场景 | 页眉措辞（要点） | 页脚声明（要点） |
 |---|---|---|
-| **API 模式（当前默认）** | 每次提问约 **1–3 秒**出答案（DeepSeek API，关闭思考模式），命中内容缓存后 ≈0.05 s；语言模型走 DeepSeek 官方 API，**不需要**在本机加载 13 GB 权重；门控草稿用本机 Qwen2.5-0.5B，**首次提问**会多花约 10–15 秒加载它 | 「本项目运行在 `<hardware>` 环境，语言模型为 **deepseek-v4-flash**（DeepSeek 官方 API：`https://api.deepseek.com`；思考模式 关），单栏最多生成 192 token，向量模型为 bge-small-zh-v1.5；法条语料为人工录入的关键条文（PENDING_FLK_VERIFICATION），案号库为合成数据。」 |
-| **本地模式**（`-LlmBackend hf`） | CPU 上首字几秒到十几秒出现，整段最长约 60–90 s（命中缓存 ≈0.1 s）；语言模型在本机 CPU 上运行 | 同上，但语言模型为 `fuzi-mingcha-v1_0`（**float16** 精度，本机权重） |
+| **本地模式（现行默认）** | CPU 上首字几秒到几十秒出现，整段受生成长度上限约束（命中内容缓存 ≈0.1 s）；语言模型在本机 CPU 上运行；门控草稿与回答是**同一份权重** | 「本项目运行在 `<hardware>` 环境，语言模型为 **`Qwen3-4B`**（`<dtype>` 精度，本机权重），单栏最多生成 192 token，向量模型为 bge-small-zh-v1.5；法条语料为人工录入的关键条文（PENDING_FLK_VERIFICATION），案号库为合成数据。」 |
+| **API 模式**（`-LlmBackend deepseek`） | 每次提问约 **1–3 秒**出答案（DeepSeek API，关闭思考模式），命中内容缓存后 ≈0.05 s；语言模型走 DeepSeek 官方 API，**不需要**在本机加载本地权重；门控草稿用本机草稿模型（现行 `Qwen3-4B`），**首次提问**会多花时间加载它 | 同上，但语言模型为 **deepseek-v4-flash**（DeepSeek 官方 API：`https://api.deepseek.com`；思考模式 关） |
 
-页脚另有一行**草稿来源声明**（D30）：
-「门控草稿来源 `auto`（默认顺序：本机 `Qwen/Qwen2.5-0.5B-Instruct` → API logprobs → 确定性评分；
-每条 trace 的 **草稿来源** 行会写明本次实际用了哪条）」。
+> 页眉页脚一律由 `Settings.provenance()` **动态取**（`lawgate/api/ui.py` 的 `build_demo()`），
+> 所以上表只是"措辞要点"，实际文字会跟着 `configs/base.yaml` 走——这是 D21/D29/D30/D38
+> 反复出现"文档写死模型名 → 与配置不符"之后定下的做法。
+
+页脚另有一行**草稿来源声明**（D30/D38）：
+「门控草稿来源 `auto`（本机 `<draft_model>` → API logprobs → 确定性评分；回答模型走本地时
+草稿直接复用回答模型本身，手册 S3.5；每条 trace 的 **草稿来源** 行会写明本次实际用了哪条）」。
 
 ---
 
@@ -1017,19 +1052,20 @@ curl.exe -N -X POST http://127.0.0.1:8010/chat/stream `
 
 ### 8.2 模型层降级链（`get_llm()`）
 
-**D30 之后多了一层且顺序有变**：`configs/base.yaml` 的 `llm_backend` 是 `deepseek`（当前默认）时，
-先用 API，**失败才逐级降级到本地**：
+**现行默认（D38）**：`configs/base.yaml` 的 `llm_backend` 是 `hf`，即**直接走本机权重**
+（`models/Qwen3-4B`，不联网、不需要任何云端凭据）；加载失败才逐级降级到 vLLM / 规则。
 
 ```
-DeepSeekLLM ──失败──▶  HFLLM  ──失败──▶  VLLMLLM  ──失败──▶  ExtractiveLLM（规则兜底）
+（llm_backend: hf，当前默认）   HFLLM ──失败──▶  VLLMLLM ──失败──▶  ExtractiveLLM（规则兜底）
+（llm_backend: deepseek）       DeepSeekLLM（直接返回，**不自动降级**——理由见下）
 ```
 
 | 场景 | 行为 |
 |---|---|
-| `llm_backend: deepseek`（默认）+ `prefer="auto"` | 先构造 `DeepSeekLLM`（**不加载任何权重**）；`DEEPSEEK_API_KEY` 缺失只 `print` 警告，调用时以 401 失败并降级 |
-| `prefer="deepseek"`（显式要求） | **不静默换模型**：失败直接把 `DeepSeekError` 抛出去（否则"改了配置却跑出另一套结果"） |
-| `llm_backend: hf` 或 `LAWGATE_LLM_PROVIDER=hf` | 直接走本地权重（离线演示）；加载失败才退 vLLM / 规则 |
-| 离线兜底 | `HFLLM` → `VLLMLLM` → `ExtractiveLLM`，每一级的失败原因都 `print` 到 stdout |
+| `llm_backend: hf`（**当前默认**） | 直接走本机权重 `models/Qwen3-4B`（完全离线）；加载失败才退 vLLM / 规则兜底 |
+| `llm_backend: deepseek` + `prefer="auto"` | 解析结果若为 `deepseek` 就**只返回 `DeepSeekLLM`**：`DEEPSEEK_API_KEY` 缺失只 `print` 一条警告，真正的问题在**调用时**以 401 暴露（人话报错会提示去查 `.env`）。**刻意不静默降级到本地模型**——否则"改了配置却跑出另一套结果"（`docs/deviations.md` D30 的教训）。想要离线就显式 `-LlmBackend hf` |
+| `prefer="deepseek"`（显式要求） | 同上，失败直接把 `DeepSeekError` 抛出去 |
+| 离线兜底 | 每一级的失败原因都 `print` 到 stdout（形如 `[llm] HF 后端加载失败（…）`） |
 
 - 失败原因会被 `print` 到 stdout（形如 `[llm] HF 后端加载失败（…）`、
   `[llm] ⚠ 走 DeepSeek API 但没有读到 DEEPSEEK_API_KEY（.env 或环境变量），调用会以 401 失败`）；
@@ -1072,7 +1108,8 @@ DeepSeekLLM ──失败──▶  HFLLM  ──失败──▶  VLLMLLM  ──
 
 | 配置 | 单条延迟（p50） | 来源 |
 |---|---|---|
-| **当前默认后端：DeepSeek API，`max_new_tokens=192`** | **1–3 s**（缓存命中 ≈0.05 s；"首字"≈取草稿 1.5–3 s） | `docs/deviations.md` D30、`docs/check_deepseek_live.txt`（整段 1.07 s / 57 字）；原 `docs/smoke_stream_http.md`（169 片/922 ms）已于 2026-09-16 删除（D37），结论留档 D28/D30 |
+| **现行默认：本机 `models/Qwen3-4B`（约 4B，fp16/CPU），`max_new_tokens=192`** | 分段与总耗时见 `docs/deviations.md` D38；草稿与回答同一份权重，**无独立草稿段**；缓存命中 ≈0.1 s | `docs/check_qwen3_4b.txt`（D38） |
+| DeepSeek API 后端，`max_new_tokens=192`（`-LlmBackend deepseek`，D30） | **1–3 s**（缓存命中 ≈0.05 s；"首字"≈取草稿 1.5–3 s） | `docs/deviations.md` D30、`docs/check_deepseek_live.txt`（整段 1.07 s / 57 字） |
 | 本地权重后端，`max_new_tokens=128` | 18.9 s | `results/timing/summary_alwaysrag_seed0_test.json`（p50 18877.6 ms） |
 | 本地权重后端，legalgate，`max_new_tokens=128` | 15.6 s | `results/pilot/summary_legalgate_seed0_test.json`（p50 15599.1 ms） |
 | **4 进程 × 3 线程**，`max_new_tokens=128` | **163.8 s**（mean 155.5 s） | `results/timing/summary_alwaysrag_seed0_test_part1.json` |
@@ -1080,8 +1117,10 @@ DeepSeekLLM ──失败──▶  HFLLM  ──失败──▶  VLLMLLM  ──
 | 历史吞吐指纹（0.5B，20 token 生成） | 1.62 s，**12.36 tok/s** | 原载 `docs/smoke_s0.json`（该文件与 `scripts/smoke_s0.py` 已于 2026-09-16 删除，D37；数字保留为历史记录） |
 | 子集预算下的实测口径 | 80-token 生成约 7–8 s/条 | `data/benchmark/subsets_manifest.json` 的 `why` |
 
-> 上表除第一行外都是**本地权重后端**的读数。换到 API 之后，"单条延迟"主要由网络往返决定，
-> 本机 CPU 只影响门控草稿（0.5B，约 1.5–3 s）与向量检索（毫秒级）。
+> 上表除第一行外都是**本地权重后端**的读数（历史口径）。**现行默认**就是本地权重
+> （`models/Qwen3-4B`，D38）：整条延迟 = 一次 prefill + 逐 token 解码，无单独的草稿耗时；
+> 若切到 API（`-LlmBackend deepseek`），"单条延迟"主要由网络往返决定，
+> 本机 CPU 只影响门控草稿（那一路用的是本地草稿模型）与向量检索（毫秒级）。
 
 **结论：线程级并发是负收益。** torch 的 intra-op 并行已吃满内存带宽，再叠加 inter-op
 并发只会互相抢核；同时 `ChannelB`（SQLite）与 chromadb 客户端**都不是线程安全的**
@@ -1120,19 +1159,22 @@ DeepSeekLLM ──失败──▶  HFLLM  ──失败──▶  VLLMLLM  ──
    不对应真实案件；E6 的满分是**构造性**结果（评测集子类与核验器判定级别同源），
    不能外推为对真实裁判文书网的准确率。
 4. **标签为规则化生成**，本环境无人工标注员；κ 报告来自模拟标注员。
-5. **最终回答默认由 DeepSeek 官方 API 生成**（`deepseek-v4-flash`，关思考，单条 192 token 约 1–3 s，D30）：
-   由此带来四条必须披露的限制——（a）**联网依赖与计费**：每问一次 HTTPS 请求（命中内容缓存则
-   0 请求），按 token 计费；断网/无密钥会明确报错并提示查 `.env` 的 `DEEPSEEK_API_KEY`；
-   （b）**首字延迟主要由取门控草稿决定**（本机 Qwen2.5-0.5B，约 1.5–3 s），不是生成本身；
-   （c）**本机不再加载回答模型权重**，绝对准确率仍**不可**与手册目标值对比；
-   （d）**τ_b 未按新草稿源重新校准**——对 LegalGate 默认 hybrid 路由无影响（b1/b3/b4 用确定性
-   复杂度评分、b2 的 τ=1.0 不可超越），但 **TARG 基线（单阈值 τ=0.10）会受影响**，
-   重跑 E1/E2 前必须先看 u 分布（`scripts/check_deepseek.py --live --with-local-draft`）。
-   **离线兜底**为本地 6.7B 司法模型（`fuzi-mingcha-v1_0`，ChatGLM 底座，CPU **fp16**，D29）：
+5. **最终回答默认由本机权重生成**（`models/Qwen3-4B` = 魔搭 `Qwen/Qwen3-4B`，约 4B，fp16/CPU，D38）：
+   由此带来三条必须披露的限制——（a）**没有 GPU 的代价**：CPU 逐 token 解码决定 192 token 的
+   等待量级（实测见 `docs/deviations.md` D38）；想快就切云端 API，代价是联网 + 按 token 计费；
+   （b）**门控草稿与回答是同一份权重**（手册 S3.5：共享模型与前缀，prefill 不翻倍），
+   因此没有"单独的草稿耗时"这一段，也没有 6.7B 时代那 13 GB 的额外常驻；
+   （c）**绝对准确率仍不可与手册目标值对比**（手册指定 7B，且法条语料非官方原文）。
+   **可选加速路径**：`-LlmBackend deepseek` 走 DeepSeek 官方 API（`deepseek-v4-flash`，关思考，
+   单条 192 token 约 1–3 s，D30），该模式下（a）**联网依赖与计费**：每问一次 HTTPS 请求
+   （命中内容缓存则 0 请求），断网/无密钥会明确报错并提示查 `.env` 的 `DEEPSEEK_API_KEY`；
+   （b）"首字"延迟主要由**取门控草稿**决定，不是生成本身。
+   **降级兜底**为本地 6.7B 司法模型（`fuzi-mingcha-v1_0`，ChatGLM 底座，CPU **fp16**，D29）：
    （a）fp16 复现精度、非 fp32/bfloat16；（b）贪心解码下长句**偶发重复打转**；
    （c）约 **1 token/s**（192 token 单栏 2–4 分钟），故离线演示常配 `-UiMaxTokens` 或用缓存。
    方法间对比因共用同一模型与超参而仍然公平。
-   历史结果（pilot/timing/E0 为 0.5B、E1 为 1.5B、D29 为本地 6.7B）口径不同，引用须注明。
+   历史结果（pilot/timing/E0 为 0.5B、E1 为 1.5B、E1–E5 为"API 回答 + 0.5B 草稿"、
+   D29 为本地 6.7B）口径各不相同，引用须注明（D21/D29/D30/D33/D38）。
 6. **桶级阈值已按新草稿源重校准（D33-3，2026-09-12）**：`configs/thresholds.json` 现为
    b1 0.29 / b2 1.0 / b3 1.0 / b4 1.0（`dev_calib` 144 条，见 `results/calibrate_report.json`；
    b1 仍 `feasible:false`，0.29 为 `largest_feasible` 兜底值）——换草稿/回答后端会改变 u 的分布尺度，

@@ -1,0 +1,3 @@
+﻿DOWNLOAD_DONE at 09/14/2026 00:13:46
+check_qwen3_e2e rc=0 (log=D:\桌面\lawgate\docs\_qwen3_check.log)
+check_draft_u   rc=0 (log=D:\桌面\lawgate\docs\_draft_u_check.log)

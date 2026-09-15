@@ -37,6 +37,28 @@ SYSTEM_WITH_CONTEXT = SYSTEM_BASE + "\n【参考资料】\n{context}\n\n" \
     "请优先依据上述参考资料回答；引用时给出法律名称与条号。"
 
 
+def default_local_thinking() -> bool:
+    """本机权重的"思考模式"默认值——**默认关**（D38）。
+
+    为什么必须显式关：Qwen3 系的 chat template 写法是
+    ``{%- if enable_thinking is defined and enable_thinking is false %}<think></think>``，
+    也就是说**不传这个变量 = 思考模式开启**。开着思考时模型会先写一大段
+    ``<think>…</think>`` 推理，``max_new_tokens=192`` 很可能被 reasoning 吃光，
+    正文变成空串或截断——这与 D30 在 DeepSeek API 上踩到的是**同一款陷阱**
+    （当时靠 ``thinking=False`` 解决）。因此本机权重也统一默认关思考。
+
+    读取优先级：``LAWGATE_LOCAL_THINKING`` 环境变量 > Settings.local_thinking > False。
+    """
+    v = os.environ.get("LAWGATE_LOCAL_THINKING")
+    if v is not None:
+        return str(v).strip().lower() in ("1", "true", "yes", "on")
+    try:
+        from lawgate.config import get_settings
+        return bool(getattr(get_settings(), "local_thinking", False))
+    except Exception:  # noqa: BLE001 — 取配置失败不该影响能否加载模型
+        return False
+
+
 @dataclass
 class DraftStats:
     """一次草稿的前 k 个 token 及其 top-k logprob 分布。"""
@@ -128,7 +150,7 @@ class HFLLM(PromptMixin, BaseLLM):
     def __init__(self, model_path: str, device: str = "cpu",
                  max_new_tokens: int = 192, topk_logprobs: int = 20,
                  cache: GenCache | None = None, threads: int | None = None,
-                 dtype: str | None = None):
+                 dtype: str | None = None, thinking: bool | None = None):
         import torch
 
         if threads:
@@ -141,6 +163,9 @@ class HFLLM(PromptMixin, BaseLLM):
         self.cache = cache or get_cache()
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         self.dtype = dtype or "auto"
+        # 思考模式（D38）：Qwen3 模板**不传 enable_thinking 就等于开启思考**，
+        # 会在 max_new_tokens 里先写一大段 reasoning（详见 default_local_thinking 的注释）。
+        self.thinking = bool(thinking) if thinking is not None else default_local_thinking()
         self.is_chatglm = False
 
         from lawgate.compat_chatglm import is_chatglm_dir
@@ -176,14 +201,29 @@ class HFLLM(PromptMixin, BaseLLM):
             self.mdl = AutoModelForCausalLM.from_pretrained(model_path, **kw)
         self.mdl.eval()
         self.device = str(next(self.mdl.parameters()).device)
+        # 模板级开关探测（D38）：只有模板里真的引用了 enable_thinking 才传这个 kwarg，
+        # 免得给别的模型塞无用参数（部分 tokenizer 会对多余 kwarg 报错）。
+        tpl = str(getattr(self.tok, "chat_template", "") or "")
+        self._tpl_supports_thinking = "enable_thinking" in tpl
+        self._tpl_kwargs: dict = (
+            {"enable_thinking": bool(self.thinking)} if self._tpl_supports_thinking else {})
 
     def build_prompt(self, query: str, history: list | None = None,
                      context: str | None = None) -> str:
         msgs = self.build_messages(query, history, context)
         if getattr(self.tok, "chat_template", None):
+            extra = getattr(self, "_tpl_kwargs", {}) or {}
             try:
-                return self.tok.apply_chat_template(msgs, tokenize=False,
-                                                   add_generation_prompt=True)
+                return self.tok.apply_chat_template(
+                    msgs, tokenize=False, add_generation_prompt=True, **extra)
+            except TypeError:
+                # 该 tokenizer/模板版本不接受这个 kwarg（或签名不匹配）：
+                # 退回不带参调用——宁可保留模板默认，也不要拼不出 prompt。
+                try:
+                    return self.tok.apply_chat_template(
+                        msgs, tokenize=False, add_generation_prompt=True)
+                except Exception:  # noqa: BLE001
+                    pass
             except Exception:  # noqa: BLE001
                 pass
         if type(self.tok).__name__ == "ChatGLMTokenizer":
@@ -217,7 +257,11 @@ class HFLLM(PromptMixin, BaseLLM):
         """
         d = super().describe()
         d.update({"llm_dtype": self.gen_dtype(),
-                  "llm_backend_impl": "chatglm-compat" if self.is_chatglm else "hf"})
+                  "llm_backend_impl": "chatglm-compat" if self.is_chatglm else "hf",
+                  # 思考模式（D38）：模板支持时才真正生效，见 default_local_thinking()
+                  "llm_thinking": bool(self.thinking),
+                  "llm_thinking_supported": bool(
+                      getattr(self, "_tpl_supports_thinking", False))})
         return d
 
     def generate(self, query: str, history: list | None = None,
@@ -533,12 +577,15 @@ class ExtractiveLLM(PromptMixin, BaseLLM):
 def get_llm(prefer: str = "auto", **kw) -> BaseLLM:
     """按可用性选择后端。prefer: auto|deepseek|hf|vllm|rule。
 
-    选择顺序（D30 之后）：
-      * ``prefer="deepseek"``：只走 API，失败直接把异常抛出去（**不静默换模型**，
-        否则"改了配置却跑出另一套结果"这种坑会再次出现）；
-      * ``prefer="auto"``：按 ``configs/base.yaml`` 的 ``llm_backend`` 决定——
-        它是 ``deepseek`` 就先用 API，网络/鉴权失败才逐级降级到本地后端，
-        并把降级原因 print 出来（谁降级、为什么降级，必须留在日志里）。
+    选择顺序（按代码实际行为写，别再照旧的"自动降级"说法）：
+      * 解析结果为 **deepseek**（``prefer="deepseek"``，或 ``prefer="auto"`` 且
+        ``llm_backend=deepseek`` 读到了 API Key）：**只返回 ``DeepSeekLLM``，不降级到本地**。
+        ``DEEPSEEK_API_KEY`` 缺失只 print 一条警告，问题在调用时以 401 暴露。
+        这是**刻意**的：静默换成本地模型会产出"改了配置却跑出另一套结果"（D30 的教训）。
+        想离线就显式 ``prefer="hf"``（或 ``启动服务.ps1 -LlmBackend hf``）。
+      * 解析结果为 **本地**（``llm_backend`` 为 ``hf``/``auto``，**D38 起的默认**）：
+        按 ``HFLLM`` → ``VLLMLLM`` → ``ExtractiveLLM`` 逐级尝试，每一级的失败原因
+        都 print 出来（谁降级、为什么降级，必须留在日志里）。
     """
     from lawgate.config import get_settings
 
@@ -571,6 +618,7 @@ def get_llm(prefer: str = "auto", **kw) -> BaseLLM:
             return HFLLM(s.causal_model, device=s.device,
                          max_new_tokens=s.max_new_tokens,
                          dtype=getattr(s, "dtype", None) or "auto",
+                         thinking=bool(getattr(s, "local_thinking", False)),
                          threads=kw.pop("threads", None), **kw)
         except Exception as exc:  # noqa: BLE001
             print(f"[llm] HF 后端加载失败（{type(exc).__name__}: {exc}）")

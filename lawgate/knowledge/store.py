@@ -138,8 +138,14 @@ class ChromaStore(BaseStore):
         self.dim = int(emb.shape[1]) if emb.size else 0
         # chromadb 元数据不接受 None，需清洗
         clean = [{k: ("" if v is None else v) for k, v in m.items()} for m in metas]
-        self.col.upsert(ids=list(ids), documents=list(docs), metadatas=clean,
-                        embeddings=emb.tolist())
+        # chromadb 单次 upsert 有批量上限（见 InternalError: batch > 5461），
+        # 数据集变大（真实文书使文档数到数万）后必须分批写入。
+        CHROMA_MAX_BATCH = 4000
+        n = len(ids)
+        for i in range(0, n, CHROMA_MAX_BATCH):
+            j = min(i + CHROMA_MAX_BATCH, n)
+            self.col.upsert(ids=list(ids[i:j]), documents=list(docs[i:j]),
+                            metadatas=clean[i:j], embeddings=emb[i:j].tolist())
 
     def query(self, embedding: np.ndarray, top_k: int = 8) -> list[Hit]:
         q = np.asarray(embedding, dtype=np.float32).reshape(-1)

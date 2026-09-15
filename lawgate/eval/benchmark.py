@@ -27,30 +27,29 @@ temporal_trap 120 / case_verify 100）**互不自洽**：
 ==============================================================================
 数据可得性事实（已对 data/kb/legal_facts.db 实测，禁止假设）
 ==============================================================================
-    * legal_provisions 共 158 行；去重后 (law_short, article_no) 仅 **95** 对；
-    * validity_status='现行有效' 的去重条文仅 **80** 对（民法典 62 / 公司法 7 /
-      劳动合同法 7 / 民事诉讼法 1 / 民法典时间效力规定 3）；
-    * 民法典种子语料只收录了 **62 条**（1、3、7、10、19、20、40、143…1258），
-      **不是全量 1260 条**。因此本模块**从不**假设条号 1..1260 存在，
-      一切条号、条名、来源 URL 均从数据库派生；
-    * provision 类需要 260 条而现行有效条文只有 80 条 → 前 80 条**一条一题**，
-      其余 180 条为同一批条文的**不同问法变体**，并在 counts.json 的
-      ``provision_construction`` 中如实报告"真实去重条数"。
-      提问文本不重复（qid 与 query 均不重复），但底层法条会被复用。
+    * 全部条号、条名、来源 URL、有效性状态均从 ``legal_provisions`` / ``law_lifecycle``
+      等表**动态派生**，本模块**从不**硬编码条数（G1 已用真实法条源补齐：13 部法律
+      共约 3161 条去重条文，其中民法典为全量 1260 条）；
+    * provision 类需要 260 条而真实去重条文远超该数（如民法典 1260 条），因此
+      ``provision_construction`` 如实报告"真实去重条数"，提问文本不重复
+      （qid 与 query 均不重复），但底层法条会被复用。
 
 ==============================================================================
-合成数据告警
+合成数据告警（已由 case_registry.data_source 动态决定）
 ==============================================================================
-``CASE_DATA_IS_SYNTHETIC = True``。case_registry / judgments 全部
-data_source='SYNTHETIC'（见 lawgate/knowledge/seed_cases.py 的模块级披露）。
-因此：
+``CASE_DATA_IS_SYNTHETIC`` 仅作历史常量保留；**实际是否被当作合成数据，由
+``KnowledgeBase.case_data_source()`` 在构建时从 case_registry 的 ``data_source``
+列实时判断**。当该列为 ``SYNTHETIC`` 时（见 lawgate/knowledge/seed_cases.py 的披露）：
 
     * case 类：``golden_source`` 一律为 ``null``（**绝不伪造 URL**）；
       案号虽然"格式合法"，但不对应真实案件；
     * case_verify 类：'真实一致 / 真实但案由不符' 中的"真实"仅指
-      "在**本仓库的合成 case_registry 中可命中**"，**不代表**在中国裁判文书网存在。
+      "在**本仓库合成 case_registry 中可命中**"，**不代表**在中国裁判文书网存在。
       结论只能表述为"核验器对四类输入的判别能力"，不能表述为对真实文书库的覆盖能力。
-    * 上述偏差同时写入 ``counts.json`` 与 ``construction_log.md``。
+
+当该列为 ``CJWS``（真实裁判文书，见 docs/DATA_GAP.md G2）时，上述两条**不适用**：
+case 类 ``golden_source`` 取真实来源链接，case_verify 的"真实"即对应真实案件。
+该动态判定同时写入 ``counts.json`` 与 ``construction_log.md``。
 
 ==============================================================================
 标注口径告警
@@ -245,6 +244,18 @@ CONCEPT_TEMPLATES_CONDITIONAL = [
 RULE_MARKERS = ("应当", "不得", "无效", "视为", "可以", "属于", "需要", "按照")
 
 RE_FACTS = re.compile(r"【原告诉称】(.*?)【本院查明】", re.S)
+#: 真实裁判文书（cn-judgment-docs 等第三方整理版）的连续叙述体：
+#: 起点取「原告向本院提出诉讼请求 / 原告诉称 / 上诉请求： …」，终点取到
+#: 「被告辩称 / 本院对证据认定 / 本院据此认定 / 原审法院认为 / 本院认为」之前，
+#: 截出原告（或上诉人）诉请与事实和理由段。二审文书常用"上诉请求："。
+RE_FACTS_REAL = re.compile(
+    r"(?:原告向本院提出诉讼请求|原告向本院提出诉讼|原告诉称|原告诉请|"
+    r"原告向本院提出|原告向法院提出|上诉请求：|上诉人上诉请求|"
+    r"上诉人向本院|上诉人（原审原告）)(.*?)"
+    r"(?:被告辩称|被上诉人（原审被告）辩称|被上诉人辩称|被告（原审被告）辩称|"
+    r"本院对证据认定如下|本院据此认定以下事实|原审法院认为|本院认为|"
+    r"本案现已审理终结)",
+    re.S)
 RE_JUDG_HEAD = re.compile(
     r"^(一案|民事判决书|__COURT__|案由[:：].*|（\d{4}）.*号|.*人民法院)$")
 
@@ -497,27 +508,55 @@ class KnowledgeBase:
             self._case_map = {}
             for r in self._conn.execute(
                     "select case_no, year, court_code, court_name, case_type, seq_no,"
-                    " cause_action, judgment_date, data_source from case_registry"):
+                    " cause_action, judgment_date, data_source, source_url from case_registry"):
                 self._case_map[r["case_no"]] = dict(r)
         return self._case_map
 
     def case_exists(self, case_no: str) -> bool:
         return case_no in self.case_map()
 
+    def case_data_source(self) -> str:
+        """返回 case_registry 的主导 data_source（多源时列出全部，逗号分隔）。"""
+        rows = self._conn.execute(
+            "select data_source, count(*) as n from case_registry group by 1"
+            " order by n desc").fetchall()
+        if not rows:
+            return "EMPTY"
+        return ",".join(r["data_source"] for r in rows)
+
     def cases_by_cause(self, cause: str) -> list[dict[str, Any]]:
         rows = [c for c in self.case_map().values() if c["cause_action"] == cause]
         return sorted(rows, key=lambda c: (c["year"], c["court_code"], c["seq_no"]))
 
     def judgment_facts(self, case_no: str) -> str:
-        """从 judgments.full_text 抽取【原告诉称】事实段。"""
+        """从 judgments.full_text 抽取【原告诉称】事实段。
+
+        兼容两种格式：
+          * 合成/标注数据：`【原告诉称】…【本院查明】`（RE_FACTS）；
+          * 真实裁判文书（中国裁判文书网第三方整理版）：连续叙述体，
+            `原告向本院提出诉讼请求/原告诉称 … 事实和理由：` 起，到
+            `本院对证据认定如下/本院据此认定以下事实/被告辩称/本院认为` 止。
+        """
         cur = self._conn.execute(
             "select full_text from judgments where case_no = ? limit 1", (case_no,))
         row = cur.fetchone()
         if not row or not row["full_text"]:
             return ""
         text = row["full_text"]
-        m = RE_FACTS.search(text)
-        raw = m.group(1) if m else text
+        m = RE_FACTS.search(text) or RE_FACTS_REAL.search(text)
+        if m:
+            raw = m.group(1)
+        else:
+            # 兜底：真实文书里未命中"原告诉称/上诉请求"锚点（如被告列在前的某些一审文书），
+            # 则从首个"原告"起截到"本院对证据认定/本院认为"之前，尽量保留案情段。
+            i = text.find("原告")
+            raw = text[i:] if i >= 0 else text
+            for end in ("本院对证据认定如下", "本院据此认定以下事实",
+                        "原审法院认为", "本院认为", "本案现已审理终结", "被告辩称"):
+                j = raw.find(end)
+                if j > 0:
+                    raw = raw[:j]
+                    break
         lines = [ln.strip() for ln in raw.splitlines() if ln.strip()]
         keep = [ln for ln in lines if not RE_JUDG_HEAD.match(ln)]
         return re.sub(r"\s+", "", "".join(keep))
@@ -543,7 +582,7 @@ class KnowledgeBase:
             "civil_code_articles_in_seed": sorted(
                 p.article_no for p in provs if p.law_short == "民法典"),
             "case_registry_rows": len(self.case_map()),
-            "case_data_source": "SYNTHETIC",
+            "case_data_source": self.case_data_source(),
         }
 
 
@@ -770,24 +809,32 @@ def build_provision(kb: KnowledgeBase, rng: random.Random) -> tuple[list[dict[st
         "distinct_articles_used": len({p.key for p in pool}),
         "variant_items_beyond_distinct_articles": max(0, N_PROVISION - len(pool)),
         "article_reuse_factor": round(N_PROVISION / max(1, len(pool)), 3),
-        "note": ("现行有效条文不足 260 条，超额部分为同条文不同问法的变体；"
-                 "query 逐题不同，底层法条复用。真实去重条数见 "
-                 "distinct_articles_available_current。"),
+        "note": (
+            f"现行有效去重条文 {len(pool)} 条。"
+            + (f"少于 {N_PROVISION} 条 → 超额 "
+               f"{max(0, N_PROVISION - len(pool))} 条为同条文不同问法的变体；"
+               "query 逐题不同，但底层法条复用。"
+               if len(pool) < N_PROVISION else
+               f"多于 {N_PROVISION} 条 → {N_PROVISION} 条题目**一条一题、无重复**，"
+               "超额不复现条文；query 逐题不同。")
+            + "真实去重条数见 distinct_articles_available_current。"),
     }
     return items, stats
 
 
 def build_case(kb: KnowledgeBase, n_per_cause: int) -> list[dict[str, Any]]:
-    """case（200, b3）：每案由 50 条，取自合成 judgments 的【原告诉称】事实段。
+    """case（200, b3）：每案由 50 条，取自 judgments 的【原告诉称】事实段。
 
-    golden_source 一律为 null（合成数据无真实来源 URL，禁止伪造）。
-    case_no.raw 为合成案号，exists=true 仅表示"在本仓库合成库中命中"。
+    - 当 case_registry.data_source='SYNTHETIC'：golden_source 一律为 null（禁止伪造 URL），
+      answer 末尾附"程序化合成案号/不对应真实案件"提示；
+    - 当为真实文书（如 CJWS）：golden_source 取该真实案号的来源链接，
+      不再附合成提示。
     """
     items: list[dict[str, Any]] = []
     n_cause = len(CAUSE_ACTIONS)
     per_cause = n_per_cause if n_per_cause else N_CASE // n_cause
-    #: 合成"案情细节"包装（judgments 的事实段由模板生成，同模板会重复，
-    #: 因此追加**从该案自身元数据派生**的真实细节，使逐题 query 唯一）
+    synthetic = kb.case_data_source() == "SYNTHETIC"
+    #: 案情细节包装（使逐题 query 唯一）
     detail_clauses = [
         "该笔金额约 {amount} 元，距今约 {months} 个月。",
         "我需要判断一下，这笔 {amount} 元到底能不能要回来；事情已经过去约 {months} 个月了。",
@@ -808,12 +855,13 @@ def build_case(kb: KnowledgeBase, n_per_cause: int) -> list[dict[str, Any]]:
                 months=idx + 1)
             provisions = [gp for gp in CAUSE_TO_PROVISIONS.get(cause, [])
                           if kb.get(gp["law_short"], gp["article_no"]) is not None]
+            src_note = ("【数据提示】本案号为程序化合成案号，案情为程序化生成，"
+                        "不对应真实案件。") if synthetic else ""
             answer = (f"与{row['case_no']}（{cause}，{row['court_name']}，"
                       f"{row['judgment_date']}）类似的情形，法院通常围绕"
                       f"{'、'.join(_cite(kb.get(g['law_short'], g['article_no'])) for g in provisions)}"
                       f"审理，并依据证据认定基础法律关系、履行情况与责任范围。"
-                      f"【数据提示】本案号为程序化合成案号，案情为程序化生成，"
-                      f"不对应真实案件。")
+                      f"{src_note}")
             items.append(make_item(
                 qid=f"case_{idx:05d}",
                 query=f"（{summary}{detail}）类似案件法院通常怎么判？",
@@ -821,13 +869,13 @@ def build_case(kb: KnowledgeBase, n_per_cause: int) -> list[dict[str, Any]]:
                 need_retrieval=True,
                 golden_answer=answer,
                 golden_provisions=provisions,
-                golden_source=None,
+                golden_source=row.get("source_url") or None,
                 slots={
                     "cause_action": cause,
                     "court_name": row["court_name"],
                     "judgment_date": row["judgment_date"],
                     "data_source": row.get("data_source", "SYNTHETIC"),
-                    "synthetic": True,
+                    "synthetic": synthetic,
                     "facts_template_id": j % len(FACT_TEMPLATES[cause]),
                 },
                 case_no=make_case_no(raw=row["case_no"], exists=True, true_cause=cause),
@@ -1260,9 +1308,12 @@ def build_temporal_trap(kb: KnowledgeBase, rng: random.Random) -> list[dict[str,
 def build_case_verify(kb: KnowledgeBase, rng: random.Random) -> tuple[list[dict[str, Any]], dict[str, Any]]:
     """case_verify（100, —）：V1 真实一致 / V2 格式合法不存在 / V3 真实但案由不符 / V4 格式非法。
 
-    注意：这里的"真实"仅指"在**本仓库合成** case_registry 中可命中"，
-    **不代表**在中国裁判文书网存在。V2/V4 的案号必须**断言**不在库中。
+    注意："真实"指"在 case_registry 中可命中"。当 data_source='SYNTHETIC' 时，
+    命中仅代表本仓库合成库存在该案号，不代表中国裁判文书网存在该案件；
+    当为真实文书（如 CJWS）时，命中即对应真实案件，golden_source 给出来源链接。
+    V2/V4 的案号必须**断言**不在库中。
     """
+    synthetic = kb.case_data_source() == "SYNTHETIC"
     all_cases = sorted(kb.case_map().values(), key=lambda c: c["case_no"])
     per_cause: dict[str, list[dict[str, Any]]] = {c: kb.cases_by_cause(c) for c in CAUSE_ACTIONS}
 
@@ -1274,10 +1325,12 @@ def build_case_verify(kb: KnowledgeBase, rng: random.Random) -> tuple[list[dict[
         v1_cases.append(row)
         q = (f"（{row['case_no']}）我查到的这个案号是真的吗？"
              f"它属于{row['cause_action']}，法院是{row['court_name']}，对吗？")
+        src_note = ("【数据提示】本项目案号库为合成数据，命中不代表真实案件存在。"
+                     if synthetic else
+                     f"（来源：{row.get('source_url')}）")
         a = (f"案号{row['case_no']}格式合法，且在本项目案号库中可以命中："
              f"案由为{row['cause_action']}，审理法院为{row['court_name']}，"
-             f"文书日期{row['judgment_date']}，核验结论为「真实一致」。"
-             f"【数据提示】本项目案号库为合成数据，命中不代表真实案件存在。")
+             f"文书日期{row['judgment_date']}，核验结论为「真实一致」。{src_note}")
         items.append(make_item(
             qid=f"cv_{len(items) + 1:05d}",
             query=q,
@@ -1285,7 +1338,7 @@ def build_case_verify(kb: KnowledgeBase, rng: random.Random) -> tuple[list[dict[
             need_retrieval=False,
             golden_answer=a,
             golden_provisions=[],
-            golden_source=None,
+            golden_source=row.get("source_url") or None,
             slots={"verify_type": "V1", "expected_exists": True,
                    "claimed_cause": row["cause_action"]},
             case_no=make_case_no(raw=row["case_no"], exists=True,
@@ -1336,10 +1389,11 @@ def build_case_verify(kb: KnowledgeBase, rng: random.Random) -> tuple[list[dict[
         assert claimed != row["cause_action"]
         assert row["case_no"] in registry
         q = (f"（{row['case_no']}）这个案子是{claimed}，你帮我核对一下案由对不对？")
+        src_note = ("（本项目案号库为合成数据）" if synthetic else
+                    f"（来源：{row.get('source_url')}）")
         a = (f"案号{row['case_no']}确实存在于本项目案号库，但案由不符："
              f"该案号对应的真实案由为{row['cause_action']}，不是{claimed}，"
-             f"核验结论为「真实但案由不符」。"
-             f"【数据提示】本项目案号库为合成数据。")
+             f"核验结论为「真实但案由不符」。{src_note}")
         items.append(make_item(
             qid=f"cv_{len(items) + 1:05d}",
             query=q,
@@ -1347,7 +1401,7 @@ def build_case_verify(kb: KnowledgeBase, rng: random.Random) -> tuple[list[dict[
             need_retrieval=False,
             golden_answer=a,
             golden_provisions=[],
-            golden_source=None,
+            golden_source=row.get("source_url") or None,
             slots={"verify_type": "V3", "expected_exists": True,
                    "claimed_cause": claimed, "registry_cause": row["cause_action"]},
             case_no=make_case_no(raw=row["case_no"], exists=True,
@@ -1396,8 +1450,11 @@ def build_case_verify(kb: KnowledgeBase, rng: random.Random) -> tuple[list[dict[
         "V1_V3_in_registry_verified": all(
             it["case_no"]["raw"] in registry
             for it in items if it["slots"].get("verify_type") in ("V1", "V3")),
-        "note": ("V1/V3 的'真实'仅指在本仓库合成 case_registry 中可命中，"
-                 "不代表中国裁判文书网上存在该案件。"),
+        "synthetic": synthetic,
+        "note": ("V1/V3 的'真实'指在本仓库 case_registry 中可命中。"
+                 + ("（当前为 SYNTHETIC 合成库，命中不代表中国裁判文书网存在该案件）"
+                    if synthetic else
+                    "（当前为真实文书库，命中即对应真实案件）")),
     }
     return items, stats
 
@@ -1511,6 +1568,7 @@ def build_all(seed: int = 42, n_per_cause: int | None = None,
         "frozen_as_of": FROZEN_AS_OF,
         "run_date": get_settings().run_date,
         "provenance": get_settings().provenance(),
+        "case_data_source": stats["case_data_source"],
         "counts_by_category": counts_by_cat,
         "single_turn_total": single_turn,
         "multiturn_groups": N_MULTITURN_GROUPS,
@@ -1533,27 +1591,30 @@ def build_all(seed: int = 42, n_per_cause: int | None = None,
                             for c in CATEGORY_ORDER},
             "reason": ("case_verify 类按设计不带法条金标（核验案号，不引法条）；"
                        "temporal_trap/T3 中少数已废止法律（如担保法）的**目标替代"
-                       "条文不在本仓库种子语料内**（民法典种子仅 62 条），"
+                       "条文不在本仓库语料内**，"
                        "此时不给出语义不相关的兜底条号，宁缺毋滥。"),
         },
         "kb_stats": stats,
         "data_caveats": [
-            "case_registry/judgments 全部为 SYNTHETIC 合成数据，"
-            "case 类 golden_source 一律为 null（不伪造 URL）。",
-            "case_verify 的'真实'仅指在本仓库合成案号库中可命中，"
-            "不代表中国裁判文书网上存在该案件。",
+            ("case_registry/judgments 当前 data_source="
+             f"{stats['case_data_source']}。"
+             + ("case 类 golden_source 一律为 null（合成数据不伪造 URL）。"
+                if stats["case_data_source"] == "SYNTHETIC" else
+                "case 类 golden_source 取真实来源链接（如中国裁判文书网）。")),
+            ("case_verify 的'真实'指在本仓库 case_registry 中可命中"
+             + ("；当前为 SYNTHETIC 合成库，命中不代表中国裁判文书网存在该案件。"
+                if stats["case_data_source"] == "SYNTHETIC" else
+                "；当前为真实文书库，命中即对应真实案件。")),
             "本环境无人工标注员：need_retrieval/golden_answer/gold_pass 均为规则化生成；"
             "annotators=['A','B'] 与 arbitrated=False 为占位字段。",
-            "民法典种子语料仅收录 62 条，非全量 1260 条；"
-            "provision 类超额部分为同条文变体。",
             "temporal_trap 的四类陷阱模板由 law_lifecycle + SUPERSEDE_MAP + "
             "validity_status 规则化生成，非人工构造。",
             "库中 validity_status='已修订' 的条文只有 1 条（公司法(2018修正)第26条），"
             "T2 因此混合使用被后续立法改写的已废止条文，并在 slots.coverage_note 标注。",
-            "部分已废止法律（如担保法）的目标替代条文未收录于种子语料，"
+            "部分已废止法律（如担保法）的目标替代条文未收录于语料，"
             "对应条目的 golden_provisions 为空，缺口已在 temporal_trap.jsonl 的 "
             "slots.coverage_gap 与本文件中逐条标注。",
-            "全部 1180 条 query 逐条唯一（构建时校验），query 末尾附有可审计的编号。",
+            "全部 query 逐条唯一（构建时校验），query 末尾附有可审计的编号。",
         ],
     }
     return items, counts
@@ -1603,6 +1664,28 @@ def render_construction_log(counts: dict[str, Any]) -> str:
                                for k, v in counts["kb_stats"]["by_law_amended"].items())
     n_gap = (counts["golden_provisions_empty"]["count"]
              - counts["counts_by_category"]["case_verify"])
+    #: provision 的"条文够不够"按实际语料规模动态陈述（语料已从 80 条扩到 1.5 万条）
+    prov_note = (
+        f"**真实可得条文只有 {ps['distinct_articles_available_current']} 条**（现行有效去重后），"
+        f"不足 {ps['requested']} 条，因此超额 {ps['variant_items_beyond_distinct_articles']} 条为"
+        f"同一批条文的不同问法变体（复现系数 {ps['article_reuse_factor']}）。"
+        "qid 与 query 均不重复，但底层法条复用。"
+        if ps["distinct_articles_available_current"] < ps["requested"] else
+        f"**现行有效去重条文 {ps['distinct_articles_available_current']} 条**，"
+        f"多于请求的 {ps['requested']} 条 → 一题一条、条文**不复用**"
+        f"（复现系数 {ps['article_reuse_factor']}）。qid 与 query 均不重复。"
+    )
+    #: case 的"合成/真实"按 case_registry.data_source 动态陈述
+    synth = counts.get("case_data_source") == "SYNTHETIC"
+    case_note = (
+        "**合成数据告警**：`case_registry`/`judgments` 的 `data_source='SYNTHETIC'`，"
+        "案号不对应真实案件，因此 `golden_source=null`（**不伪造 URL**）；"
+        "`case_no.exists=true` 仅表示在本仓库合成库中命中。"
+        if synth else
+        "**真实文书**：`case_registry`/`judgments` 的 `data_source='CJWS'`，"
+        "案号对应真实案件，`golden_source` 取真实来源链接；"
+        "`case_no.exists=true` 即该案号在真实文书库中命中。"
+    )
     return f"""# 评测集构建日志（自动生成，请勿手改）
 
 生成时间（run_date）：{counts['run_date']}
@@ -1639,15 +1722,11 @@ def render_construction_log(counts: dict[str, Any]) -> str:
 
 ### provision（{cc['provision']}）
 直接问条（`《X法》第Y条的内容是什么？`）与场景问条（`（场景）适用哪条法律？`）各 50%。
-**真实可得条文只有 {ps['distinct_articles_available_current']} 条**（现行有效去重后），
-不足 {ps['requested']} 条，因此超额 {ps['variant_items_beyond_distinct_articles']} 条为同一批条文
-的不同问法变体（复现系数 {ps['article_reuse_factor']}）。qid 与 query 均不重复，但底层法条复用。
+{prov_note}
 
 ### case（{cc['case']}）
-每案由 50 条，取自 `judgments.full_text` 的【原告诉称】事实段（截断约 200 字）。
-**合成数据告警**：`case_registry`/`judgments` 的 `data_source='SYNTHETIC'`，
-案号不对应真实案件，因此 `golden_source=null`（**不伪造 URL**）；
-`case_no.exists=true` 仅表示在本仓库合成库中命中。
+每案由 50 条，取自 `judgments.full_text` 的原告诉称/上诉请求事实段（截断约 200 字）。
+{case_note}
 
 ### multi-turn（{cc['multi-turn']}）
 固定三段结构：T1 完整陈述（含案由主题词）→ T2 省略主语的追问

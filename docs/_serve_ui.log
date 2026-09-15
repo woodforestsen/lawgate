@@ -1,0 +1,31 @@
+[serve_one] service=ui torch_threads=8 cwd=D:\桌面\lawgate pid=24264
+[serve_one] 最终回答模型 = fuzi-mingcha-v1_0（models/fuzi-mingcha-v1_0）　精度=float16　来源=configs/base.yaml 的 causal_model（显式指定）　（6.7B 司法模型；fp16 常驻约 12.5 GB，CPU 生成约 1 token/s —— 192 token 单栏约 2–4 分钟；演示可用 -UiMaxTokens 80 缩短）
+[serve_one] ui max_new_tokens=192（左栏直答与右栏律核共用同一上限）
+Traceback (most recent call last):
+  File "D:\桌面\lawgate\scripts\serve_one.py", line 161, in <module>
+    raise SystemExit(main())
+                     ~~~~^^
+  File "D:\桌面\lawgate\scripts\serve_one.py", line 145, in main
+    build_demo().launch(server_name=args.host,
+    ~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+                        server_port=args.port or 7860,
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        share=False, show_error=True,
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                        inbrowser=False)
+                        ^^^^^^^^^^^^^^^^
+  File "E:\Anaconda\Lib\site-packages\gradio\blocks.py", line 2720, in launch
+    ) = http_server.start_server(
+        ~~~~~~~~~~~~~~~~~~~~~~~~^
+        app=self.app,
+        ^^^^^^^^^^^^^
+    ...<4 lines>...
+        ssl_keyfile_password=ssl_keyfile_password,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+  File "E:\Anaconda\Lib\site-packages\gradio\http_server.py", line 157, in start_server
+    raise OSError(
+        f"Cannot find empty port in range: {min(server_ports)}-{max(server_ports)}. You can specify a different port by setting the GRADIO_SERVER_PORT environment variable or passing the `server_port` parameter to `launch()`."
+    )
+OSError: Cannot find empty port in range: 7860-7860. You can specify a different port by setting the GRADIO_SERVER_PORT environment variable or passing the `server_port` parameter to `launch()`.

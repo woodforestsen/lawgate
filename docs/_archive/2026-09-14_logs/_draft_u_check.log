@@ -1,0 +1,42 @@
+﻿========================================================================
+  闂ㄦ帶淇″彿 u 鍒嗗竷浣撴锛堟崲鑽夌妯″瀷鍚庡繀璺戯紝D38锛?
+========================================================================
+  鍥炵瓟妯″瀷     : Qwen3-4B  <models/Qwen3-4B>
+  鍚庣 / 绮惧害  : hf / float16锛坧rovider=local锛?
+  鑽夌閰嶇疆     : draft_source=auto  draft_model=models/Qwen3-4B
+  k_draft      : 20锛堜俊鍙疯仛鍚堝彧鐢ㄥ墠 8 浣嶏級
+  鐜拌 蟿_b     : {'b1': 0.29, 'b2': 1.0, 'b3': 1.0, 'b4': 1.0}
+  鍔犺浇妯″瀷锛堥娆℃彁闂墠鍔犺浇鑽夌妯″瀷锛涙湰鏈?Qwen3-4B fp16 绾?8 GB 鍐呭瓨锛夆€?
+python.exe : 
+所在位置 D:\桌面\lawgate\scripts\_watch_verify.ps1:49 字符: 1
++ & $py $check2 '--out' (Join-Path $repo 'docs\check_draft_u.txt') *> $ ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]
+Loading weights:   0%|          | 1/398 [00:00<03:43,  1.78it/s]
+Loading weights:  31%|鈻堚枅鈻?      | 124/398 [00:00<00:01, 248.08it/s]
+Loading weights:  49%|鈻堚枅鈻堚枅鈻?    | 194/398 [00:00<00:00, 239.85it/s]
+Loading weights:  61%|鈻堚枅鈻堚枅鈻堚枅    | 243/398 [00:01<00:00, 253.91it/s]
+Loading weights:  71%|鈻堚枅鈻堚枅鈻堚枅鈻堚枏  | 284/398 [00:01<00:00, 230.00it/s]
+Loading weights:  80%|鈻堚枅鈻堚枅鈻堚枅鈻堚枆  | 317/398 [00:01<00:00, 227.10it/s]
+Loading weights:  87%|鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻?| 346/398 [00:01<00:00, 203.42it/s]
+Loading weights:  93%|鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枎| 371/398 [00:01<00:00, 158.29it/s]
+Loading weights:  98%|鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枈| 391/398 [00:02<00:00, 135.98it/s]
+Loading weights: 100%|鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅| 398/398 [00:02<00:00, 176.00it/s]
+  鑽夌閾鹃『搴?  : ['answer_model']
+  鍥炵瓟妯″瀷鑷堪 : {"llm_backend": "hf", "llm_name": "Qwen3-4B", "llm_dtype": "float16", "llm_backend_impl": "hf", "llm_thinking": false, "llm_thinking_supported": true}
+  鉁?浠€涔堟槸绂诲鍐烽潤鏈燂紵                              u(margin)=0.0001 瑁曞害=9.453 婧?answer_model 18.42s
+  鉁?銆婂悎鍚屾硶銆嬬52鏉¤瀹氬摢浜涙儏褰㈠悎鍚屾棤鏁堬紵                   u(margin)=0.0001 瑁曞害=9.291 婧?answer_model 35.13s
+  鉁?锛?022锛夋勃01姘戠粓12345鍙?杩欎釜妗堝瓙鏄€庝箞鍥炰簨锛?          u(margin)=0.0000 瑁曞害=16.117 婧?answer_model 37.18s
+  鉁?鎷呬繚娉曠幇鍦ㄨ繕鏈夌敤鍚楋紵                             u(margin)=0.0005 瑁曞害=7.527 婧?answer_model 31.46s
+  鉁?鐢ㄤ汉鍗曚綅鏈涔﹂潰鍔冲姩鍚堝悓瓒呰繃涓€涓湀锛屽姵鍔ㄨ€呭彲浠ヤ富寮犱粈涔堬紵           u(margin)=0.0001 瑁曞害=9.639 婧?answer_model 32.48s
+  鉁?銆婃皯娉曞吀銆嬬1077鏉′笌宸插簾姝㈢殑銆婂悎鍚屾硶銆嬬52鏉℃湁浠€涔堜笉鍚岋紵        u(margin)=0.0000 瑁曞害=18.965 婧?answer_model 37.04s
+
+  ---- 姹囨€?----
+  u(margin) 鍖洪棿 : [0.0000, 0.0005]锛屾瀬宸?0.0005
+  璺?0.10 鐨勬潯鏁?: 0/6锛圱ARG 鍗曢槇鍊?蟿=0.10锛涜嫢鎭掍负 0 鎴栨亽涓哄叏閮紝鍒欒闃堝€煎湪鏂拌崏绋夸笂澶卞幓鍖哄垎搴︼級
+  鈿?缁撹锛氫笂闈㈠彧鏄?*鍒嗗竷浣撴**銆傛槸鍚﹂噸鏍″噯 蟿_b / TARG 蟿锛屽彇鍐充簬浣犺繕瑕佷笉瑕佸湪**鏂拌崏绋?*涓婅窇 E1/E2锛堣 docs/deviations.md D38锛夈€?
+
+  Markdown 琛ㄥ凡鍐欏叆 D:\妗岄潰\lawgate\docs\check_draft_u.txt

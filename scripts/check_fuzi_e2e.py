@@ -1,14 +1,18 @@
 # -*- coding: utf-8 -*-
 """端到端自检：**本地兜底模型 fuzi-mingcha-v1_0 这条离线路径是否仍然可用**（真机，非流式 + 流式）。
 
-⚠ D30 起，**默认回答模型已换成 DeepSeek 官方 API**（`configs/base.yaml: llm_backend`），
-本脚本因此**显式要求本地后端**（`get_llm("hf")`）——它测的是"断网/无密钥时的兜底路径"，
-而不是默认路径。默认路径的自检是 ``scripts/check_deepseek.py``。
+⚠ 口径说明：**D38（2026-09-13）起，默认回答模型是本机 `models/Qwen3-4B`**
+（`configs/base.yaml: causal_model`），fuzi 已退为**降级兜底**（候选目录第二名）。
+本脚本因此**显式要求 fuzi 这条兜底路径**——它测的是"Qwen3-4B 缺失时系统还能不能跑"，
+而不是默认路径。默认路径的自检是 ``scripts/check_qwen3_e2e.py``；
+（D30–D38 之间默认曾是 DeepSeek API，那段历史的自检是 ``check_deepseek.py``。）
 
 与其它自检的分工：
-  * scripts/check_backend.py   —— 秒级，回答"配置指向哪个模型"（不加载权重）；
-  * scripts/check_deepseek.py  —— 云端默认路径（离线段 + `--live`）；
-  * 本脚本                      —— 真机加载 13 GB 本地权重，回答"离线兜底确实可用、
+  * scripts/check_backend.py    —— 秒级，回答"配置指向哪个模型"（不加载权重）；
+  * scripts/check_qwen3_e2e.py  —— **现行默认路径**（本机 Qwen3-4B，D38）；
+  * scripts/check_draft_u.py    —— 门控信号 u 的分布体检（D38 阈值）；
+  * scripts/check_deepseek.py   —— 云端可选加速路径（离线段 + `--live`）；
+  * 本脚本                       —— 真机加载 13 GB fuzi 兜底权重，回答"兜底路径确实可用、
                                    流式与整段一致、缓存生效"。CPU 上约需 1–3 分钟。
 
 用法（工作目录 = 仓库根）：

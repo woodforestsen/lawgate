@@ -1,0 +1,27 @@
+[PASS] 回答模型是 Qwen3-4B（不是 fuzi / 0.5B 快照）  llm_name=Qwen3-4B
+[PASS] 规模确实是 4B 档  llm_name=Qwen3-4B
+[PASS] 走 HF（transformers）后端  llm_backend=hf
+[PASS] 精度为 float16（CPU 内存可行，fp32 会翻倍到 ~16 GB）  llm_dtype=float16
+[PASS] 思考模式已显式关闭（否则 192 token 会被 <think> 推理吃光）  llm_thinking=False 模板支持=True
+[PASS] 加载占用 < 13 GB（未落成 fp32）  7.1 GB
+[PASS] 草稿源 = answer_model（复用回答模型，未额外加载第二份权重）  draft_source=answer_model
+[PASS] 非流式回答非空  86 字
+[PASS] 回答含中文（编码正确）  
+[PASS] trace 记录了后端  hf
+[PASS] 两轮文本完全一致（同键同参）  
+[PASS] 第二轮明显更快（缓存生效）  0.0s vs 68.5s
+[PASS] 有 stage 事件  ['generate']
+[PASS] 有 delta 增量  39 片
+[PASS] done.answer 非空  
+[PASS] delta 拼接 == done.answer（权威全文一致）  
+[PASS] 流式回答含中文  
+
+回答模型：models/Qwen3-4B
+草稿模型：models/Qwen3-4B
+精度：float16  设备：cpu  思考模式：关
+生成上限：48 token
+加载 35.3s（占 7.1 GB）/ 首轮 68.5s / 缓存轮 0.0s / 流式 95.3s（首字 44.2s）
+草稿源：answer_model
+
+⚠ 阈值提醒（D38）：configs/thresholds.json 的 τ_b 是 0.5B 草稿口径下校准的，
+换 Qwen3-4B 后须先用 scripts/check_draft_u.py 看 u 分布再决定是否重校准。

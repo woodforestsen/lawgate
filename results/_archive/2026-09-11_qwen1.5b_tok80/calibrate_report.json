@@ -1,0 +1,275 @@
+{
+  "date": "2026-09-11",
+  "provenance": {
+    "hardware": "CPU AMD64 / 18 cores / no CUDA",
+    "device": "cpu",
+    "causal_model": "qwen2.5-1.5b-instruct",
+    "causal_model_path": "models\\qwen2.5-1.5b-instruct",
+    "embed_model": "bge-small-zh-v1.5",
+    "llm_backend": "auto",
+    "date": "2026-09-11",
+    "version": "0.1.0",
+    "written_at": "2026-09-11T22:42:28"
+  },
+  "split": "dev_calib",
+  "dev_items": 144,
+  "always_rag_acc_on_dev": 0.3889,
+  "never_rag_acc_on_dev": 0.2917,
+  "target": 0.3839,
+  "rule": "largest_feasible",
+  "signal": "margin",
+  "grid_max": 1.0,
+  "modes": {
+    "hybrid": {
+      "meta": {
+        "n_items": 144,
+        "n_preds": 144,
+        "n_skipped": 0,
+        "skipped_examples": []
+      },
+      "taus": {
+        "b1": 0.29,
+        "b2": 1.0,
+        "b3": 1.0,
+        "b4": 0.49
+      },
+      "per_bucket": {
+        "b1": {
+          "n": 36,
+          "tau": 0.29,
+          "feasible": false,
+          "rule": "largest_feasible",
+          "target": 0.3839,
+          "acc_at_tau": 0.1667,
+          "rr_at_tau": 0.9722,
+          "acc_if_always_retrieve": 0.1667,
+          "acc_if_never_retrieve": 0.1389,
+          "tau_min_feasible": null,
+          "tau_max_feasible": null
+        },
+        "b2": {
+          "n": 44,
+          "tau": 1.0,
+          "feasible": true,
+          "rule": "largest_feasible",
+          "target": 0.3839,
+          "acc_at_tau": 0.4545,
+          "rr_at_tau": 0.0,
+          "acc_if_always_retrieve": 0.6136,
+          "acc_if_never_retrieve": 0.4545,
+          "tau_min_feasible": 0.01,
+          "tau_max_feasible": 1.0
+        },
+        "b3": {
+          "n": 16,
+          "tau": 1.0,
+          "feasible": true,
+          "rule": "largest_feasible",
+          "target": 0.3839,
+          "acc_at_tau": 0.6875,
+          "rr_at_tau": 0.0,
+          "acc_if_always_retrieve": 0.75,
+          "acc_if_never_retrieve": 0.6875,
+          "tau_min_feasible": 0.01,
+          "tau_max_feasible": 1.0
+        },
+        "b4": {
+          "n": 48,
+          "tau": 0.49,
+          "feasible": false,
+          "rule": "largest_feasible",
+          "target": 0.3839,
+          "acc_at_tau": 0.25,
+          "rr_at_tau": 0.75,
+          "acc_if_always_retrieve": 0.2292,
+          "acc_if_never_retrieve": 0.125,
+          "tau_min_feasible": null,
+          "tau_max_feasible": null
+        }
+      },
+      "dev_acc_at_taus": 0.3403,
+      "dev_rr_at_taus": 0.4931
+    },
+    "complexity": {
+      "meta": {
+        "n_items": 144,
+        "n_preds": 144,
+        "n_skipped": 0,
+        "skipped_examples": []
+      },
+      "taus": {
+        "b1": 0.29,
+        "b2": 1.0,
+        "b3": 1.0,
+        "b4": 0.49
+      },
+      "per_bucket": {
+        "b1": {
+          "n": 36,
+          "tau": 0.29,
+          "feasible": false,
+          "rule": "largest_feasible",
+          "target": 0.3839,
+          "acc_at_tau": 0.1667,
+          "rr_at_tau": 0.9722,
+          "acc_if_always_retrieve": 0.1667,
+          "acc_if_never_retrieve": 0.1389,
+          "tau_min_feasible": null,
+          "tau_max_feasible": null
+        },
+        "b2": {
+          "n": 44,
+          "tau": 1.0,
+          "feasible": true,
+          "rule": "largest_feasible",
+          "target": 0.3839,
+          "acc_at_tau": 0.4545,
+          "rr_at_tau": 0.0,
+          "acc_if_always_retrieve": 0.6136,
+          "acc_if_never_retrieve": 0.4545,
+          "tau_min_feasible": 0.01,
+          "tau_max_feasible": 1.0
+        },
+        "b3": {
+          "n": 16,
+          "tau": 1.0,
+          "feasible": true,
+          "rule": "largest_feasible",
+          "target": 0.3839,
+          "acc_at_tau": 0.6875,
+          "rr_at_tau": 0.0,
+          "acc_if_always_retrieve": 0.75,
+          "acc_if_never_retrieve": 0.6875,
+          "tau_min_feasible": 0.01,
+          "tau_max_feasible": 1.0
+        },
+        "b4": {
+          "n": 48,
+          "tau": 0.49,
+          "feasible": false,
+          "rule": "largest_feasible",
+          "target": 0.3839,
+          "acc_at_tau": 0.25,
+          "rr_at_tau": 0.75,
+          "acc_if_always_retrieve": 0.2292,
+          "acc_if_never_retrieve": 0.125,
+          "tau_min_feasible": null,
+          "tau_max_feasible": null
+        }
+      },
+      "dev_acc_at_taus": 0.3403,
+      "dev_rr_at_taus": 0.4931
+    },
+    "signal": {
+      "meta": {
+        "n_items": 144,
+        "n_preds": 144,
+        "n_skipped": 0,
+        "skipped_examples": []
+      },
+      "taus": {
+        "b1": 0.01,
+        "b2": 1.0,
+        "b3": 1.0,
+        "b4": 0.04
+      },
+      "per_bucket": {
+        "b1": {
+          "n": 36,
+          "tau": 0.01,
+          "feasible": false,
+          "rule": "largest_feasible",
+          "target": 0.3839,
+          "acc_at_tau": 0.1667,
+          "rr_at_tau": 1.0,
+          "acc_if_always_retrieve": 0.1667,
+          "acc_if_never_retrieve": 0.1389,
+          "tau_min_feasible": null,
+          "tau_max_feasible": null
+        },
+        "b2": {
+          "n": 44,
+          "tau": 1.0,
+          "feasible": true,
+          "rule": "largest_feasible",
+          "target": 0.3839,
+          "acc_at_tau": 0.4545,
+          "rr_at_tau": 0.0,
+          "acc_if_always_retrieve": 0.6136,
+          "acc_if_never_retrieve": 0.4545,
+          "tau_min_feasible": 0.01,
+          "tau_max_feasible": 1.0
+        },
+        "b3": {
+          "n": 16,
+          "tau": 1.0,
+          "feasible": true,
+          "rule": "largest_feasible",
+          "target": 0.3839,
+          "acc_at_tau": 0.6875,
+          "rr_at_tau": 0.0,
+          "acc_if_always_retrieve": 0.75,
+          "acc_if_never_retrieve": 0.6875,
+          "tau_min_feasible": 0.01,
+          "tau_max_feasible": 1.0
+        },
+        "b4": {
+          "n": 48,
+          "tau": 0.04,
+          "feasible": false,
+          "rule": "largest_feasible",
+          "target": 0.3839,
+          "acc_at_tau": 0.2292,
+          "rr_at_tau": 0.8333,
+          "acc_if_always_retrieve": 0.2292,
+          "acc_if_never_retrieve": 0.125,
+          "tau_min_feasible": null,
+          "tau_max_feasible": null
+        }
+      },
+      "dev_acc_at_taus": 0.3333,
+      "dev_rr_at_taus": 0.5278
+    }
+  },
+  "single_tau": {
+    "hybrid": {
+      "tau": 0.01,
+      "report": {
+        "n": 144,
+        "tau": 0.01,
+        "feasible": true,
+        "target": 0.3839,
+        "acc_at_tau": 0.3889,
+        "rr_at_tau": 0.9722
+      },
+      "dev_acc": 0.3889,
+      "dev_rr": 0.9722
+    },
+    "complexity": {
+      "tau": 0.01,
+      "report": {
+        "n": 144,
+        "tau": 0.01,
+        "feasible": false,
+        "target": 0.3839,
+        "acc_at_tau": 0.3819,
+        "rr_at_tau": 0.9028
+      },
+      "dev_acc": 0.3819,
+      "dev_rr": 0.9028
+    },
+    "signal": {
+      "tau": 0.01,
+      "report": {
+        "n": 144,
+        "tau": 0.01,
+        "feasible": true,
+        "target": 0.3839,
+        "acc_at_tau": 0.3889,
+        "rr_at_tau": 0.9792
+      },
+      "dev_acc": 0.3889,
+      "dev_rr": 0.9792
+    }
+  }
+}

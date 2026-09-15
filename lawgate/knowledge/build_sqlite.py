@@ -37,6 +37,8 @@ from lawgate.knowledge.seed_corpus import (  # noqa: E402
     LAW_ALIAS_SEED,
     LAW_SPECS,
     LIFECYCLE_SEED,
+    OFFICIAL_ARTICLE_COUNT,
+    PROVENANCE,
     SEED_VERSION,
     SUPERSEDE_MAP,
     TOPIC_KEYWORDS_SEED,
@@ -45,14 +47,13 @@ from lawgate.knowledge.seed_cases import generate_cases, render_full_text  # noq
 
 TODAY = date.today().isoformat()
 
-# 官方原文的条数上限（用于连续性检查的期望值）。
-# 民法典 1260 条是手册的硬验收指标；其余法律全文尚未导入，不设期望上限。
-EXPECTED_MAX = {"民法典": 1260}
+# 官方公布条数（用于逐法连续性检查）。2026-09-13 起 13 部法**全部**已导入官方全文，
+# 因此不再只给民法典设期望上限。
+EXPECTED_MAX: dict[str, int] = dict(OFFICIAL_ARTICLE_COUNT)
 
-# 未导入全文的法律：种子语料只覆盖关键条文，需在报告中标记为"部分"
-PARTIAL_LAWS = {"合同法", "公司法", "公司法(2018修正)", "劳动合同法",
-                "民事诉讼法", "物权法", "担保法", "婚姻法", "侵权责任法",
-                "继承法", "收养法", "民法典时间效力规定"}
+# 尚只含关键条文（未导入全文）的法律。2026-09-13 完成真实数据替换后为空集，
+# 保留该常量是为了审计口径可回溯：报告里的"全文状态"列据此判定。
+PARTIAL_LAWS: set[str] = set()
 
 
 def connect(db_path: str | Path) -> sqlite3.Connection:
@@ -80,22 +81,36 @@ def create_schema(conn: sqlite3.Connection) -> None:
     conn.commit()
 
 
-def write_raw_files(raw_dir: Path) -> dict:
-    """把种子语料落盘为 data/raw/*.txt + sources.json（保留真实导入通道）。"""
+def write_raw_files(raw_dir: Path, overwrite: bool = False) -> dict:
+    """把种子语料落盘为 data/raw/*.txt + sources.json（保留真实导入通道）。
+
+    **默认不覆盖已存在的 .txt**（2026-09-13 修正）。2026-09-13 起
+    `data/raw/*.txt` 是真实来源抓取的正文（现行法来自 laws-data 数据集，
+    已废止法来自中国人大网官方全文页），而种子语料只是 1–8 条的降级兜底。
+    早期版本无条件 write_text 覆盖，一次 `build_sqlite` 就会把 985 条官方
+    条文打回 16 条种子条文——属于会静默破坏数据的缺陷，故改为"缺则补"。
+    """
     raw_dir.mkdir(parents=True, exist_ok=True)
     sources: dict = {}
     for short, spec in LAW_SPECS.items():
-        (raw_dir / f"{short}.txt").write_text(
-            spec["text"].strip() + "\n", encoding="utf-8")
+        dst = raw_dir / f"{short}.txt"
+        if overwrite or not dst.exists():
+            dst.write_text(spec["text"].strip() + "\n", encoding="utf-8")
+        prov = PROVENANCE.get(short)
         sources[short] = {
             "law_name": spec["law_name"],
             "version": spec["version"],
-            "source_kind": "MANUAL_TRANSCRIPT",
-            "source_url": spec["source_url"],
+            "source_kind": prov["source_kind"] if prov else "MANUAL_TRANSCRIPT",
+            "source_url": prov["source_url"] if prov else spec["source_url"],
             "retrieval_date": TODAY,
-            "verification": "PENDING_FLK_VERIFICATION",
+            "verification": "VERIFIED" if prov else "PENDING_FLK_VERIFICATION",
             "seed_version": SEED_VERSION,
-            "note": ("项目组人工录入的关键条文，尚未与 FLK 官方文本逐字比对；"
+            "note": ("正文来自真实官方来源（见 source_kind / source_url），"
+                     "由 scripts/fetch_laws_dataset.py 与 "
+                     "scripts/fetch_official_repealed.py 抓取后经 "
+                     "scripts/import_law_text.py 校验入库"
+                     if prov else
+                     "项目组人工录入的关键条文，尚未与官方文本逐字比对；"
                      "import_law_text.py 可覆盖为官方原文并升级为 VERIFIED"),
         }
     (raw_dir / "sources.json").write_text(
@@ -115,7 +130,12 @@ def ingest_laws(conn: sqlite3.Connection, raw_dir: Path, from_raw: bool,
 
     for short, spec in LAW_SPECS.items():
         txt_path = raw_dir / f"{short}.txt"
-        if from_raw and txt_path.exists():
+        using_raw = bool(from_raw and txt_path.exists())
+        # 溯源口径：只有"正文确实取自 data/raw 的真实来源文件"才算 VERIFIED。
+        # 若走种子兜底（from_raw=False 或文件缺失），一律如实标 MANUAL_TRANSCRIPT。
+        kind = spec.get("source_kind", "MANUAL_TRANSCRIPT") if using_raw else "MANUAL_TRANSCRIPT"
+        verified = using_raw and kind in ("NPC_OFFICIAL", "LAWS_DATA_DATASET")
+        if using_raw:
             provs = parse_law_file(
                 txt_path, short, spec["law_name"],
                 law_level=spec["law_level"], version=spec["version"],
@@ -146,13 +166,13 @@ def ingest_laws(conn: sqlite3.Connection, raw_dir: Path, from_raw: bool,
                 (p.law_name, p.law_short, p.law_level, p.book, p.chapter, p.section,
                  p.article_no, p.article_label, p.paragraph_no, p.item_no, p.item_idx,
                  p.text, p.validity_status, p.effective_date, p.publish_date,
-                 p.version, "FLK", p.source_url, p.retrieval_date))
+                 p.version, kind, p.source_url, p.retrieval_date))
             pid = cur.lastrowid
             cur.execute(
                 "INSERT INTO provision_fts(text, law_short, article_no, provision_id) "
                 "VALUES (?,?,?,?)", (p.text, p.law_short, p.article_no, pid))
 
-        expected_max = EXPECTED_MAX.get(short) if not (short in PARTIAL_LAWS) else None
+        expected_max = EXPECTED_MAX.get(short) if short not in PARTIAL_LAWS else None
         a = audit_law(source_text, provs, expected_max=expected_max,
                       is_truncated=short in PARTIAL_LAWS)
         audits[short] = a.to_dict()
@@ -161,12 +181,16 @@ def ingest_laws(conn: sqlite3.Connection, raw_dir: Path, from_raw: bool,
         conn.execute(
             """INSERT OR REPLACE INTO ingest_provenance
                (law_short,version,source_kind,source_url,retrieval_date,verification,
-                n_provisions,continuity_gaps,note)
-               VALUES (?,?,?,?,?,?,?,?,?)""",
-            (short, spec["version"], "MANUAL_TRANSCRIPT", spec["source_url"], TODAY,
-             "PENDING_FLK_VERIFICATION", len(provs),
-             json.dumps(a.continuity["missing"]),
-             "部分条文语料（关键条文），continuity_max=%d" % a.continuity["max"]))
+                verified_by,verified_date,n_provisions,continuity_gaps,note)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?)""",
+            (short, spec["version"], kind, spec["source_url"], TODAY,
+             "VERIFIED" if verified else "PENDING_FLK_VERIFICATION",
+             "build_sqlite --from-raw（自动校验）" if verified else None,
+             TODAY if verified else None,
+             len(provs), json.dumps(a.continuity["missing"]),
+             ("官方全文导入，continuity_max=%d" % a.continuity["max"]) if verified
+             else ("种子兜底语料（关键条文），continuity_max=%d"
+                   % a.continuity["max"])))
 
     conn.commit()
     return all_provs, audits
@@ -229,9 +253,30 @@ def build_keywords(conn: sqlite3.Connection) -> int:
 
 
 def build_registry(conn: sqlite3.Connection, n_per_cause: int = 150,
-                   with_judgments: bool = True) -> dict:
-    """案号真值库 + 极简合成文书（合成数据，见 seed_cases 说明）。"""
+                   with_judgments: bool = True, keep_real: bool = True) -> dict:
+    """案号真值库 + 极简合成文书（合成数据，见 seed_cases 说明）。
+
+    **有真实文书时不再生成合成数据**（2026-09-13 修正）：早期版本无条件
+    `DELETE FROM judgments/case_registry` 后重建 600 条合成数据，会把
+    `scripts/import_judgments.py` 导入的真实 CJWS 案号与文书整体抹掉。
+    现在默认 keep_real=True——库里已存在非 SYNTHETIC 行时直接返回，跳过重建。
+    """
     import random
+
+    if keep_real:
+        n_real = conn.execute(
+            "SELECT COUNT(*) FROM case_registry WHERE data_source != 'SYNTHETIC'"
+        ).fetchone()[0]
+        if n_real:
+            n_j = conn.execute(
+                "SELECT COUNT(*) FROM judgments WHERE data_source != 'SYNTHETIC'"
+            ).fetchone()[0]
+            causes = sorted(r[0] for r in conn.execute(
+                "SELECT DISTINCT cause_action FROM case_registry "
+                "WHERE data_source != 'SYNTHETIC' AND cause_action IS NOT NULL"
+            ).fetchall())
+            return {"n_cases": n_real, "n_judgments": n_j, "causes": causes,
+                    "synthetic_skipped": True}
 
     conn.execute("DELETE FROM judgments")
     conn.execute("DELETE FROM case_registry")
@@ -276,8 +321,8 @@ def write_qa_report(conn: sqlite3.Connection, audits: dict, all_provs: list,
     lines.append(f"- 语料版本：{SEED_VERSION}")
     lines.append(f"- 法条表行数（款/项级）：**{total_rows}**")
     lines.append(f"- 条文条数（条级）：**{total_arts}**")
-    lines.append(f"- 案号库：**{registry['n_cases']}** 条（合成）；"
-                 f"文书：**{registry['n_judgments']}** 篇（合成）")
+    lines.append(f"- 案号库：**{registry['n_cases']}** 条；"
+                 f"文书：**{registry['n_judgments']}** 篇")
     lines.append("")
     lines.append("## 1. 逐法审计\n")
     lines.append("| 法 | 条数 | 行数 | continuity max | 缺号 | 往返一致率 | 全文状态 |")
@@ -307,12 +352,30 @@ def write_qa_report(conn: sqlite3.Connection, audits: dict, all_provs: list,
                  "`data/kb/manual_audit.csv`，需法学生逐条核对官方原文后签名。")
     lines.append("")
     lines.append("## 3. 溯源与残余风险\n")
-    lines.append("- 全部法条 `source_kind=MANUAL_TRANSCRIPT`、"
-                 "`verification=PENDING_FLK_VERIFICATION`。")
-    lines.append("- 案号库与文书均为**合成数据**（`data_source=SYNTHETIC`），"
-                 "不对应真实案件；E6 结论仅限核验器判别能力。")
-    lines.append("- 执行环境网络存在中间层劫持（详见 `docs/deviations.md` D0），"
-                 "故未从网络抓取法律原文。")
+    prov_rows = conn.execute(
+        "SELECT source_kind, verification, COUNT(*) c FROM ingest_provenance "
+        "GROUP BY 1,2 ORDER BY 3 DESC").fetchall()
+    lines.append("### 3.1 法条正文来源（取自 ingest_provenance，非硬编码）\n")
+    lines.append("| source_kind | verification | 法数 |")
+    lines.append("|---|---|---|")
+    for r in prov_rows:
+        lines.append(f"| {r['source_kind']} | {r['verification']} | {r['c']} |")
+    lines.append("")
+    for tbl, label in (("case_registry", "案号库"), ("judgments", "文书")):
+        rows = conn.execute(
+            f"SELECT data_source, COUNT(*) c FROM {tbl} GROUP BY 1").fetchall()
+        desc = "、".join(f"{r['data_source']} {r['c']} 条" for r in rows) or "（空）"
+        lines.append(f"- {label} data_source 分布：{desc}")
+    lines.append("")
+    synth = conn.execute(
+        "SELECT COUNT(*) c FROM judgments WHERE data_source='SYNTHETIC'").fetchone()["c"]
+    if synth:
+        lines.append("- ⚠️ 仍有合成文书（`data_source=SYNTHETIC`），不对应真实案件；"
+                     "E6 结论仅限核验器判别能力，须执行 "
+                     "`scripts/import_judgments.py --src data/judgments --replace-synthetic` 替换。")
+    else:
+        lines.append("- 文书全部来自真实公开来源（`data_source=CJWS`），"
+                     "E6 可表述为对真实文书库的覆盖能力。")
     lines.append("")
     if extra:
         lines.append("## 4. 其他统计\n")

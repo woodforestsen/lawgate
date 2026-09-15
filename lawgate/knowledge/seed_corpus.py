@@ -366,6 +366,59 @@ LAW_SPECS: dict[str, dict] = {
     },
 }
 
+# ------------------------------------------------- 真实数据源溯源（2026-09-13）
+# 本节是**权威口径**：LAW_SPECS[*]["text"] 中的条文只是离线降级用的旧种子，
+# 2026-09-13 完成"真实数据替换"后，`legal_facts.db` 的正文一律来自
+# `data/raw/<law_short>.txt`，而该文件由下列脚本从下列真实来源抓取：
+#   · scripts/fetch_laws_dataset.py   —— 开源结构化数据集 laws-data（MIT）
+#   · scripts/fetch_official_repealed.py —— 中国人大网官方法律全文页
+# 导入后 ingest_provenance.source_kind / source_url 取这里的值，
+# 不再写死为 FLK_OFFICIAL（此前那条记录与实际来源不符，属于必须修正的失真）。
+#
+# 来源等级：
+#   A 中国人大网官方全文页（www.npc.gov.cn）
+#   B 开源结构化数据集 laws-data（原始文本源自官方公开渠道，MIT 许可）
+LAWS_DATA_REPO = "https://github.com/13098806890/laws-data/blob/main/"
+_NPC_PAGE = "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_{}.htm"
+
+PROVENANCE: dict[str, dict[str, str]] = {
+    # ---- 现行有效法：来自 laws-data 结构化数据集 ----
+    "民法典": {"source_kind": "LAWS_DATA_DATASET",
+             "source_url": LAWS_DATA_REPO + "json/法律/中华人民共和国民法典_20200528.json"},
+    "公司法": {"source_kind": "LAWS_DATA_DATASET",
+             "source_url": LAWS_DATA_REPO + "json/法律/中华人民共和国公司法_20231229.json"},
+    "公司法(2018修正)": {"source_kind": "LAWS_DATA_DATASET",
+                    "source_url": LAWS_DATA_REPO + "json/法律/中华人民共和国公司法_20181026.json"},
+    "劳动合同法": {"source_kind": "LAWS_DATA_DATASET",
+              "source_url": LAWS_DATA_REPO + "json/法律/中华人民共和国劳动合同法_20121228.json"},
+    "民事诉讼法": {"source_kind": "LAWS_DATA_DATASET",
+              "source_url": LAWS_DATA_REPO + "json/法律/中华人民共和国民事诉讼法_20230901.json"},
+    "民法典时间效力规定": {
+        "source_kind": "LAWS_DATA_DATASET",
+        "source_url": LAWS_DATA_REPO +
+        "json/司法解释/最高人民法院关于适用《中华人民共和国民法典》时间效力的若干规定_20201229.json"},
+    # ---- 已废止法：来自中国人大网官方全文页（原种子仅 1–8 条，现为全文）----
+    "合同法": {"source_kind": "NPC_OFFICIAL", "source_url": _NPC_PAGE.format(1992739)},
+    "物权法": {"source_kind": "NPC_OFFICIAL", "source_url": _NPC_PAGE.format(1992736)},
+    "侵权责任法": {"source_kind": "NPC_OFFICIAL", "source_url": _NPC_PAGE.format(1992753)},
+    "婚姻法": {"source_kind": "NPC_OFFICIAL", "source_url": _NPC_PAGE.format(1992746)},
+    "继承法": {"source_kind": "NPC_OFFICIAL", "source_url": _NPC_PAGE.format(1992749)},
+    "收养法": {"source_kind": "NPC_OFFICIAL", "source_url": _NPC_PAGE.format(1992751)},
+    "担保法": {"source_kind": "NPC_OFFICIAL", "source_url": _NPC_PAGE.format(1992740)},
+}
+
+# 官方公布条数（用于导入校验；已由官方页面逐条核对）
+OFFICIAL_ARTICLE_COUNT: dict[str, int] = {
+    "民法典": 1260, "合同法": 428, "物权法": 247, "侵权责任法": 92,
+    "婚姻法": 51, "继承法": 37, "收养法": 34, "担保法": 96,
+    "公司法": 266, "公司法(2018修正)": 218, "劳动合同法": 98,
+    "民事诉讼法": 306, "民法典时间效力规定": 28,
+}
+
+for _k, _v in PROVENANCE.items():
+    LAW_SPECS[_k].update(_v)
+
+
 # ---------------------------------------------------------------- 沿革种子
 LIFECYCLE_SEED: list[tuple] = [
     ("合同法", "民法典", "废止", "2021-01-01", "主席令第四十五号",

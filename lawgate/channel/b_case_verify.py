@@ -110,7 +110,8 @@ class CaseNoVerifier:
         real = {"case_no": row["case_no"], "court_name": row["court_name"],
                 "cause_action": row["cause_action"], "case_type": row["case_type"],
                 "judgment_date": row["judgment_date"],
-                "data_source": row["data_source"] if "data_source" in row.keys() else None}
+                "data_source": row["data_source"] if "data_source" in row.keys() else None,
+                "source_url": row["source_url"] if "source_url" in row.keys() else None}
 
         # ---- 三级：类型一致性 ----
         claimed_type = parsed.get("case_type_name") or ""

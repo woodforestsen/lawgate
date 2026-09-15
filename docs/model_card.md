@@ -65,7 +65,7 @@
 
 | 角色 | 实际使用 | 版本/规格 | 说明 |
 |---|---|---|---|
-| 因果语言模型 | **`Qwen/Qwen2.5-1.5B-Instruct`** | 本地目录 `models/qwen2.5-1.5b-instruct`（`model.safetensors` 3 087 467 144 字节）；CPU fp32；14 线程 | 手册原指定 `Qwen2.5-7B-Instruct`（S3.8）；因**无 CUDA**而降级。**实际生效的为什么是 1.5B**：`lawgate/config.py` 的 `CAUSAL_MODEL_CANDIDATES` 把 1.5B 目录排在第一位，`_first_existing_dir()` 命中即用——早期文档写的"0.5B（1.5B 已下载但未采用）"**与实际不符**，已由 `docs/deviations.md` D21 更正。0.5B 现仅作为 1.5B 缺失时的兜底，其产物见 `results/pilot`、`results/timing`、`figures/e0/e0_signals_*`（口径不同，不得混用） |
+| 因果语言模型 | **`Qwen/Qwen3-4B`**（魔搭 ModelScope） | 本地目录 `models/Qwen3-4B`（3 个 safetensors 分片，约 8.1 GB）；CPU **fp16**；`llm_backend: hf` | **现行默认（2026-09-13，D38）**：回答与门控草稿用**同一份权重**（手册 S3.5 原设计）。取回方式 `scripts/download_modelscope.py`（本机 HF 不可达，D0）。**历史轨迹**：`Qwen2.5-0.5B`（无 CUDA 降级，D9）→ `Qwen2.5-1.5B-Instruct`（`models/qwen2.5-1.5b-instruct`，D21）→ `models/fuzi-mingcha-v1_0`（6.7B 司法微调，D29）→ DeepSeek API `deepseek-v4-flash`（D30）→ **本机 Qwen3-4B（D38，现行）**；`fuzi` 权重仍留作降级兜底。历史产物（`results/pilot`、`results/timing`、`figures/e0/e0_signals_*`）为 0.5B/1.5B 口径，**不得与现行数字混用** |
 | 向量编码模型 | **`BAAI/bge-small-zh-v1.5`** | `models/bge-small-zh-v1.5`，**512 维** | **手册指定模型，且已实际使用**（非降级）。查询侧加指令前缀「为这个句子生成表示以用于检索相关文章：」，文档侧不加（`lawgate/knowledge/embed.py`） |
 | 检索后端 | chromadb | `1.5.9`，集合 `legal`，`hnsw:space=cosine` | 失败自动降级为 `NumpyStore`（`lawgate/knowledge/store.py`） |
 | 重排器 | BM25 + 字符覆盖 + 结构命中 | `0.60·BM25归一 + 0.25·字符覆盖率 + 0.15·结构命中`（jieba 分词） | `lawgate/knowledge/rerank.py: Reranker` |
@@ -99,8 +99,8 @@ scikit-learn 1.7.2、scipy 1.16.3、statsmodels 0.14.5、gradio 5.50.0、fastapi
 | 检索 | `top_k` / `rerank` | `8` / `True` | `RouterOptions` |
 | 复杂度评分 | 七维权重 | 人工设定、**不调参**（long 0.30 / case_word 0.30 / topic 0.20 / multi_turn 0.10 / compare 0.10 / boilerplate −0.30（有条号再 −0.20）/ category_prior 0.30\|0.20） | `lawgate/gate/complexity.py` |
 | 案号 | 年份合理区间 | `(1990, 当前年+1)` | `lawgate/channel/b_case_verify.py` |
-| 门控草稿 | 草稿来源 | `auto` → 本机 `Qwen/Qwen2.5-0.5B-Instruct`（**不是**回答模型，D30） | `configs/base.yaml: draft_source` |
-| 生成 | 回答模型 | **DeepSeek API `deepseek-v4-flash`（关思考）**；离线兜底 `models/fuzi-mingcha-v1_0` | `configs/base.yaml: llm_backend` |
+| 门控草稿 | 草稿来源 | `auto`；**回答模型走本地时草稿直接复用回答模型本身**（`answer_model`，手册 S3.5，D38），现行即 `models/Qwen3-4B`；切 API 时才走 local → api → rule（历史默认是 `Qwen/Qwen2.5-0.5B-Instruct`，D30） | `configs/base.yaml: draft_source` / `draft_model` |
+| 生成 | 回答模型 | **本机权重 `models/Qwen3-4B`（魔搭 `Qwen/Qwen3-4B`，约 4B，fp16/CPU，现行默认，D38）**；可选切 DeepSeek API `deepseek-v4-flash`（关思考，D30）；降级兜底 `models/fuzi-mingcha-v1_0` | `configs/base.yaml: llm_backend` / `causal_model` |
 | 缓存 | key | `sha256(model\|kind\|max_tokens\|prompt)` | `lawgate/cache.py` |
 
 ---
@@ -188,6 +188,11 @@ scikit-learn 1.7.2、scipy 1.16.3、statsmodels 0.14.5、gradio 5.50.0、fastapi
 > 门控草稿 = 本机 `Qwen2.5-0.5B-Instruct`（贪心）；生成长度 = **192 token**。
 > 2026-09-11 的旧口径（本地 1.5B / 80 token）产物已归档 `results/_archive/2026-09-11_qwen1.5b_tok80/`，
 > **禁止与新数字并排引用**。
+>
+> ⚠ 上面是 **E1–E5 这批数字自己的口径**（2026-09-12，D33）。**运行期默认已在 2026-09-13 换成
+> "回答 = 本机 `models/Qwen3-4B` + 草稿 = 同一份权重"（D38）**，两套口径不可混着引用；
+> 想在 D33 口径下复跑，用 `启动服务.ps1 -LlmBackend deepseek` 并把 `LAWGATE_DRAFT_MODEL`
+> 指回 HF 缓存里的 0.5B 快照。
 
 | 实验 | 结论一句话 | 关键数字 | 产物 |
 |---|---|---|---|
@@ -273,13 +278,17 @@ scikit-learn 1.7.2、scipy 1.16.3、statsmodels 0.14.5、gradio 5.50.0、fastapi
 - **表现**：生成答案偏短、指令遵循弱、拒答率与不确定表述率偏高；早期在
   `max_new_tokens=80` 下常出现半句截断，不易稳定给出"法律名 + 条号 + 规则"三段式答案。
 - **根因**：手册指定的 7B 不可用（无 CUDA），当时实际使用 0.5B（`docs/deviations.md` D9）。
-  **2026-09-12 起该风险已大幅缓解**：最终回答改由 DeepSeek API `deepseek-v4-flash` 生成（D30），
+  **2026-09-12 起该风险已大幅缓解**：回答模型先后换成 DeepSeek API `deepseek-v4-flash`（D30）
+  与本机 **`models/Qwen3-4B`（魔搭 Qwen/Qwen3-4B，约 4B，D38）**，
   生成长度回到 **192**（D33），且实测 acc 0.6144 / 显著优于 Always-RAG（§6.4）；
-  本机 0.5B 现在只负责**门控草稿**（20 token 的前缀分布），不再决定答案质量。
+  0.5B 现在**已经完全退出**：草稿也改用 Qwen3-4B（回答走本地时两者本就是同一份权重），
+  模型规模不再决定答案质量也不决定门控尺度。
 - **缓解**：门控与判分尽量依赖**结构性判据**（是否引用正确条号、是否漏判失效）
   而非表述质量；通道 B 的答案完全由数据库渲染，与模型规模无关；
   `ExtractiveLLM` 兜底路径保证无权重也可运行。
-- **残余风险**：**旧口径（本地 1.5B/80 token）的绝对准确率不可与新口径对比**；
+- **残余风险**：**旧口径（本地 1.5B/80 token、回答走 API + 0.5B 草稿）的绝对准确率
+  不可与现行 4B 配置对比**；且 τ_b 是 0.5B 草稿口径下校准的，
+  换草稿后须重看 u 分布再决定是否重校准（D38）。
   新口径数字必须带"API 回答 / 0.5B 草稿 / 192 token"三件套引用。
 
 ### F5 法条覆盖缺口导致的"查无此条"降级

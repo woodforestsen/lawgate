@@ -2,131 +2,131 @@
   "民法典": {
     "law_name": "中华人民共和国民法典",
     "version": "2020",
-    "source_kind": "MANUAL_TRANSCRIPT",
-    "source_url": "https://flk.npc.gov.cn/detail2.html?ZmY4MDgxODE3Yjk3MDgxMDEzZGExNzVjYTlkYjQ2Mw==",
-    "retrieval_date": "2026-09-10",
-    "verification": "PENDING_FLK_VERIFICATION",
+    "source_kind": "LAWS_DATA_DATASET",
+    "source_url": "https://github.com/13098806890/laws-data/blob/main/json/法律/中华人民共和国民法典_20200528.json",
+    "retrieval_date": "2026-09-13",
+    "verification": "VERIFIED",
     "seed_version": "seed-2026.09",
-    "note": "项目组人工录入的关键条文，尚未与 FLK 官方文本逐字比对；import_law_text.py 可覆盖为官方原文并升级为 VERIFIED"
+    "note": "正文来自真实官方来源（见 source_kind / source_url），由 scripts/fetch_laws_dataset.py 与 scripts/fetch_official_repealed.py 抓取后经 scripts/import_law_text.py 校验入库"
   },
   "合同法": {
     "law_name": "中华人民共和国合同法",
     "version": "1999",
-    "source_kind": "MANUAL_TRANSCRIPT",
-    "source_url": "https://flk.npc.gov.cn/",
-    "retrieval_date": "2026-09-10",
-    "verification": "PENDING_FLK_VERIFICATION",
+    "source_kind": "NPC_OFFICIAL",
+    "source_url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992739.htm",
+    "retrieval_date": "2026-09-13",
+    "verification": "VERIFIED",
     "seed_version": "seed-2026.09",
-    "note": "项目组人工录入的关键条文，尚未与 FLK 官方文本逐字比对；import_law_text.py 可覆盖为官方原文并升级为 VERIFIED"
+    "note": "正文来自真实官方来源（见 source_kind / source_url），由 scripts/fetch_laws_dataset.py 与 scripts/fetch_official_repealed.py 抓取后经 scripts/import_law_text.py 校验入库"
   },
   "公司法": {
     "law_name": "中华人民共和国公司法",
     "version": "2023修订",
-    "source_kind": "MANUAL_TRANSCRIPT",
-    "source_url": "https://flk.npc.gov.cn/",
-    "retrieval_date": "2026-09-10",
-    "verification": "PENDING_FLK_VERIFICATION",
+    "source_kind": "LAWS_DATA_DATASET",
+    "source_url": "https://github.com/13098806890/laws-data/blob/main/json/法律/中华人民共和国公司法_20231229.json",
+    "retrieval_date": "2026-09-13",
+    "verification": "VERIFIED",
     "seed_version": "seed-2026.09",
-    "note": "项目组人工录入的关键条文，尚未与 FLK 官方文本逐字比对；import_law_text.py 可覆盖为官方原文并升级为 VERIFIED"
+    "note": "正文来自真实官方来源（见 source_kind / source_url），由 scripts/fetch_laws_dataset.py 与 scripts/fetch_official_repealed.py 抓取后经 scripts/import_law_text.py 校验入库"
   },
   "公司法(2018修正)": {
     "law_name": "中华人民共和国公司法",
     "version": "2018修正",
-    "source_kind": "MANUAL_TRANSCRIPT",
-    "source_url": "https://flk.npc.gov.cn/",
-    "retrieval_date": "2026-09-10",
-    "verification": "PENDING_FLK_VERIFICATION",
+    "source_kind": "LAWS_DATA_DATASET",
+    "source_url": "https://github.com/13098806890/laws-data/blob/main/json/法律/中华人民共和国公司法_20181026.json",
+    "retrieval_date": "2026-09-13",
+    "verification": "VERIFIED",
     "seed_version": "seed-2026.09",
-    "note": "项目组人工录入的关键条文，尚未与 FLK 官方文本逐字比对；import_law_text.py 可覆盖为官方原文并升级为 VERIFIED"
+    "note": "正文来自真实官方来源（见 source_kind / source_url），由 scripts/fetch_laws_dataset.py 与 scripts/fetch_official_repealed.py 抓取后经 scripts/import_law_text.py 校验入库"
   },
   "劳动合同法": {
     "law_name": "中华人民共和国劳动合同法",
     "version": "2012修正",
-    "source_kind": "MANUAL_TRANSCRIPT",
-    "source_url": "https://flk.npc.gov.cn/",
-    "retrieval_date": "2026-09-10",
-    "verification": "PENDING_FLK_VERIFICATION",
+    "source_kind": "LAWS_DATA_DATASET",
+    "source_url": "https://github.com/13098806890/laws-data/blob/main/json/法律/中华人民共和国劳动合同法_20121228.json",
+    "retrieval_date": "2026-09-13",
+    "verification": "VERIFIED",
     "seed_version": "seed-2026.09",
-    "note": "项目组人工录入的关键条文，尚未与 FLK 官方文本逐字比对；import_law_text.py 可覆盖为官方原文并升级为 VERIFIED"
+    "note": "正文来自真实官方来源（见 source_kind / source_url），由 scripts/fetch_laws_dataset.py 与 scripts/fetch_official_repealed.py 抓取后经 scripts/import_law_text.py 校验入库"
   },
   "民事诉讼法": {
     "law_name": "中华人民共和国民事诉讼法",
     "version": "2023修正",
-    "source_kind": "MANUAL_TRANSCRIPT",
-    "source_url": "https://flk.npc.gov.cn/",
-    "retrieval_date": "2026-09-10",
-    "verification": "PENDING_FLK_VERIFICATION",
+    "source_kind": "LAWS_DATA_DATASET",
+    "source_url": "https://github.com/13098806890/laws-data/blob/main/json/法律/中华人民共和国民事诉讼法_20230901.json",
+    "retrieval_date": "2026-09-13",
+    "verification": "VERIFIED",
     "seed_version": "seed-2026.09",
-    "note": "项目组人工录入的关键条文，尚未与 FLK 官方文本逐字比对；import_law_text.py 可覆盖为官方原文并升级为 VERIFIED"
+    "note": "正文来自真实官方来源（见 source_kind / source_url），由 scripts/fetch_laws_dataset.py 与 scripts/fetch_official_repealed.py 抓取后经 scripts/import_law_text.py 校验入库"
   },
   "民法典时间效力规定": {
     "law_name": "最高人民法院关于适用《中华人民共和国民法典》时间效力的若干规定",
     "version": "2020",
-    "source_kind": "MANUAL_TRANSCRIPT",
-    "source_url": "https://www.court.gov.cn/",
-    "retrieval_date": "2026-09-10",
-    "verification": "PENDING_FLK_VERIFICATION",
+    "source_kind": "LAWS_DATA_DATASET",
+    "source_url": "https://github.com/13098806890/laws-data/blob/main/json/司法解释/最高人民法院关于适用《中华人民共和国民法典》时间效力的若干规定_20201229.json",
+    "retrieval_date": "2026-09-13",
+    "verification": "VERIFIED",
     "seed_version": "seed-2026.09",
-    "note": "项目组人工录入的关键条文，尚未与 FLK 官方文本逐字比对；import_law_text.py 可覆盖为官方原文并升级为 VERIFIED"
+    "note": "正文来自真实官方来源（见 source_kind / source_url），由 scripts/fetch_laws_dataset.py 与 scripts/fetch_official_repealed.py 抓取后经 scripts/import_law_text.py 校验入库"
   },
   "物权法": {
     "law_name": "中华人民共和国物权法",
     "version": "2007",
-    "source_kind": "MANUAL_TRANSCRIPT",
-    "source_url": "https://flk.npc.gov.cn/",
-    "retrieval_date": "2026-09-10",
-    "verification": "PENDING_FLK_VERIFICATION",
+    "source_kind": "NPC_OFFICIAL",
+    "source_url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992736.htm",
+    "retrieval_date": "2026-09-13",
+    "verification": "VERIFIED",
     "seed_version": "seed-2026.09",
-    "note": "项目组人工录入的关键条文，尚未与 FLK 官方文本逐字比对；import_law_text.py 可覆盖为官方原文并升级为 VERIFIED"
+    "note": "正文来自真实官方来源（见 source_kind / source_url），由 scripts/fetch_laws_dataset.py 与 scripts/fetch_official_repealed.py 抓取后经 scripts/import_law_text.py 校验入库"
   },
   "担保法": {
     "law_name": "中华人民共和国担保法",
     "version": "1995",
-    "source_kind": "MANUAL_TRANSCRIPT",
-    "source_url": "https://flk.npc.gov.cn/",
-    "retrieval_date": "2026-09-10",
-    "verification": "PENDING_FLK_VERIFICATION",
+    "source_kind": "NPC_OFFICIAL",
+    "source_url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992740.htm",
+    "retrieval_date": "2026-09-13",
+    "verification": "VERIFIED",
     "seed_version": "seed-2026.09",
-    "note": "项目组人工录入的关键条文，尚未与 FLK 官方文本逐字比对；import_law_text.py 可覆盖为官方原文并升级为 VERIFIED"
+    "note": "正文来自真实官方来源（见 source_kind / source_url），由 scripts/fetch_laws_dataset.py 与 scripts/fetch_official_repealed.py 抓取后经 scripts/import_law_text.py 校验入库"
   },
   "婚姻法": {
     "law_name": "中华人民共和国婚姻法",
     "version": "2001修正",
-    "source_kind": "MANUAL_TRANSCRIPT",
-    "source_url": "https://flk.npc.gov.cn/",
-    "retrieval_date": "2026-09-10",
-    "verification": "PENDING_FLK_VERIFICATION",
+    "source_kind": "NPC_OFFICIAL",
+    "source_url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992746.htm",
+    "retrieval_date": "2026-09-13",
+    "verification": "VERIFIED",
     "seed_version": "seed-2026.09",
-    "note": "项目组人工录入的关键条文，尚未与 FLK 官方文本逐字比对；import_law_text.py 可覆盖为官方原文并升级为 VERIFIED"
+    "note": "正文来自真实官方来源（见 source_kind / source_url），由 scripts/fetch_laws_dataset.py 与 scripts/fetch_official_repealed.py 抓取后经 scripts/import_law_text.py 校验入库"
   },
   "侵权责任法": {
     "law_name": "中华人民共和国侵权责任法",
     "version": "2009",
-    "source_kind": "MANUAL_TRANSCRIPT",
-    "source_url": "https://flk.npc.gov.cn/",
-    "retrieval_date": "2026-09-10",
-    "verification": "PENDING_FLK_VERIFICATION",
+    "source_kind": "NPC_OFFICIAL",
+    "source_url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992753.htm",
+    "retrieval_date": "2026-09-13",
+    "verification": "VERIFIED",
     "seed_version": "seed-2026.09",
-    "note": "项目组人工录入的关键条文，尚未与 FLK 官方文本逐字比对；import_law_text.py 可覆盖为官方原文并升级为 VERIFIED"
+    "note": "正文来自真实官方来源（见 source_kind / source_url），由 scripts/fetch_laws_dataset.py 与 scripts/fetch_official_repealed.py 抓取后经 scripts/import_law_text.py 校验入库"
   },
   "继承法": {
     "law_name": "中华人民共和国继承法",
     "version": "1985",
-    "source_kind": "MANUAL_TRANSCRIPT",
-    "source_url": "https://flk.npc.gov.cn/",
-    "retrieval_date": "2026-09-10",
-    "verification": "PENDING_FLK_VERIFICATION",
+    "source_kind": "NPC_OFFICIAL",
+    "source_url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992749.htm",
+    "retrieval_date": "2026-09-13",
+    "verification": "VERIFIED",
     "seed_version": "seed-2026.09",
-    "note": "项目组人工录入的关键条文，尚未与 FLK 官方文本逐字比对；import_law_text.py 可覆盖为官方原文并升级为 VERIFIED"
+    "note": "正文来自真实官方来源（见 source_kind / source_url），由 scripts/fetch_laws_dataset.py 与 scripts/fetch_official_repealed.py 抓取后经 scripts/import_law_text.py 校验入库"
   },
   "收养法": {
     "law_name": "中华人民共和国收养法",
     "version": "1998修正",
-    "source_kind": "MANUAL_TRANSCRIPT",
-    "source_url": "https://flk.npc.gov.cn/",
-    "retrieval_date": "2026-09-10",
-    "verification": "PENDING_FLK_VERIFICATION",
+    "source_kind": "NPC_OFFICIAL",
+    "source_url": "http://www.npc.gov.cn/zgrdw/npc/lfzt/rlyw/2016-07/01/content_1992751.htm",
+    "retrieval_date": "2026-09-13",
+    "verification": "VERIFIED",
     "seed_version": "seed-2026.09",
-    "note": "项目组人工录入的关键条文，尚未与 FLK 官方文本逐字比对；import_law_text.py 可覆盖为官方原文并升级为 VERIFIED"
+    "note": "正文来自真实官方来源（见 source_kind / source_url），由 scripts/fetch_laws_dataset.py 与 scripts/fetch_official_repealed.py 抓取后经 scripts/import_law_text.py 校验入库"
   }
 }

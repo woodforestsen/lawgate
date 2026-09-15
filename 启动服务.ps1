@@ -11,8 +11,9 @@
     与实验脚本的区别：这里**不做任何实验**，只把已经建好的知识库
     （data/kb/legal_facts.db + data/kb/chroma）与最终回答模型起成服务。
 
-    最终回答模型（D30 之后，2026-09-13 改默认）：默认走**本机权重
-    models/fuzi-mingcha-v1_0**（夫子·明察 6.7B，CPU fp16，约 1 token/s），
+    最终回答模型（2026-09-13 改默认，见 docs/deviations.md D38）：默认走**本机权重
+    models/Qwen3-4B**（魔搭 Qwen/Qwen3-4B，CPU fp16）；门控草稿与它**是同一份权重**
+    （手册 S3.5：草稿与正式生成共享模型与前缀）。
     加 -LlmBackend deepseek 可临时切回 DeepSeek 官方 API（密钥在 .env）。
 
     退出：在本窗口按 Ctrl+C（会连同两个服务一起停掉）。
@@ -207,18 +208,22 @@ foreach ($f in @('data\kb\legal_facts.db', 'data\kb\chroma\chroma.sqlite3',
 #   * 走 API：确认 .env 里有密钥（只报"有没有"，绝不回显明文）；
 #   * 走本地：确认权重目录存在。
 $Script:Provider = 'deepseek'
+$causalName = '（未解析）'
+$draftName = '（未解析）'
 try {
-    $probe = & $Py -c "import sys;sys.path.insert(0,r'$Root');import lawgate;from lawgate.config import get_settings;s=get_settings();print(s.llm_provider);print(s.deepseek_model);print(bool(s.deepseek_api_key));print(s.model_label('draft'))" 2>&1
+    $probe = & $Py -c "import sys;sys.path.insert(0,r'$Root');import lawgate;from lawgate.config import get_settings;s=get_settings();print(s.llm_provider);print(s.deepseek_model);print(bool(s.deepseek_api_key));print(s.model_label('draft'));print(s.model_label('causal'))" 2>&1
     $Script:Provider = ($probe | Select-Object -First 1)
     $modelName = ($probe | Select-Object -Index 1)
     $hasKey = ($probe | Select-Object -Index 2)
     $draftName = ($probe | Select-Object -Index 3)
+    $causalName = ($probe | Select-Object -Index 4)
     if ($Script:Provider -eq 'deepseek') {
         $keyText = if ($hasKey -eq 'True') { '已读到（.env）' } else { '缺失 → 会 401，请在 .env 填 DEEPSEEK_API_KEY' }
         Write-Host "  回答模型 : DeepSeek API · $modelName　Key $keyText" -ForegroundColor Cyan
         Write-Host "  门控草稿 : 本机 $draftName（回答走 API，门控信号仍需本地 logprobs，见 D30）" -ForegroundColor DarkGray
     } else {
-        Write-Host "  回答模型 : 本机权重（LAWGATE_LLM_PROVIDER/$($Script:Provider)）" -ForegroundColor Cyan
+        Write-Host "  回答模型 : 本机权重 $causalName（LAWGATE_LLM_PROVIDER=$($Script:Provider)）" -ForegroundColor Cyan
+        Write-Host "  门控草稿 : 与回答模型**同一份权重**（手册 S3.5：共享模型与前缀，不额外加载）" -ForegroundColor DarkGray
     }
 } catch {
     Write-Host "  [警告] 模型配置解析失败：$_" -ForegroundColor Yellow
@@ -250,7 +255,7 @@ $Script:Jobs = @()
 
 $Script:Jobs += Start-Service-Job -Name 'lawgate-ui' -Service 'ui'
 Write-Host ''
-Write-Host '  已拉起 Gradio 进程，等待 7860 就绪（首次要加载 1.5B 权重 + 向量库，约 1–2 分钟）…' -ForegroundColor Yellow
+Write-Host '  已拉起 Gradio 进程，等待 7860 就绪（首次要加载本地权重 + 向量库，约 1–3 分钟）…' -ForegroundColor Yellow
 
 if (-not (Wait-Ready -Name 'Gradio' -Url 'http://127.0.0.1:7860/' -TimeoutSec 420)) {
     Write-Host '  Gradio 未在 300s 内就绪。最近的输出：' -ForegroundColor Red
@@ -293,10 +298,11 @@ if ($Script:Provider -eq 'deepseek') {
     Write-Host '        门控草稿用本机 Qwen2.5-0.5B（首次提问时加载，约 10–15 秒一次性开销）。' -ForegroundColor DarkGray
     Write-Host '        想切回本机大模型：.\启动服务.ps1 -LlmBackend hf' -ForegroundColor DarkGray
 } else {
-    Write-Host '        最终回答模型 = 本机 fuzi-mingcha-v1_0（夫子·明察 6.7B，fp16/CPU）。' -ForegroundColor DarkGray
-    Write-Host "        整段最长 $UiMaxTokens token，CPU 上约 2–4 分钟/栏；命中内容缓存后 ≈ 0.1 s。" -ForegroundColor DarkGray
+    Write-Host "        最终回答模型 = 本机 $causalName（fp16/CPU，本机权重）。" -ForegroundColor DarkGray
+    Write-Host "        门控草稿 = 同一份权重（手册 S3.5），不额外加载第二个模型。" -ForegroundColor DarkGray
+    Write-Host "        整段最长 $UiMaxTokens token，CPU 上按模型大小需数十秒到数分钟/栏；命中内容缓存后 ≈ 0.1 s。" -ForegroundColor DarkGray
     Write-Host '        想缩短等待可加 -UiMaxTokens 80（左右两栏会一起变短，口径仍一致）。' -ForegroundColor DarkGray
-    Write-Host '        模型未加载完成前页面可能转圈，稍等即可（首次提问才加载 13 GB 权重）。' -ForegroundColor DarkGray
+    Write-Host '        模型未加载完成前页面可能转圈，稍等即可（首次提问才加载权重）。' -ForegroundColor DarkGray
     Write-Host '        想临时切回 DeepSeek API：.\启动服务.ps1 -LlmBackend deepseek' -ForegroundColor DarkGray
 }
 

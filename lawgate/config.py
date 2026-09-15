@@ -45,10 +45,15 @@ def _load_yaml(path: Path) -> dict:
 
 # ---------------------------------------------------------------- 模型候选
 # 顺序即优先级：本地目录 → HF 缓存 repo id。
-# fuzi-mingcha-v1_0（夫子·明察，ChatGLM-6B 底座的司法大模型）优先，
-# 仓库自带 modeling_chatglm.py，需 trust_remote_code=True（HFLLM 已默认传入）。
-# 0.5B 已在本机 HF 缓存中；1.5B 由 scripts/fetch_hf_files.py 拉到 models/。
+# 现行默认：**models/Qwen3-4B**（= 魔搭社区的 Qwen/Qwen3-4B，D38）。
+#   Qwen3 是标准 transformers 架构（AutoModelForCausalLM + apply_chat_template），
+#   **不走** ChatGLM 兼容层；权重由 scripts/download_modelscope.py 从魔搭拉取。
+# 历史候选全部保留在后面，本机谁还在就自动可用：
+#   * fuzi-mingcha-v1_0（夫子·明察，ChatGLM-6B 底座的司法大模型，D29）——
+#     仓库自带 modeling_chatglm.py，需 trust_remote_code=True（HFLLM 已默认传入）；
+#   * 0.5B 已在本机 HF 缓存中；1.5B 由 scripts/fetch_hf_files.py 拉到 models/。
 CAUSAL_MODEL_CANDIDATES = [
+    "models/Qwen3-4B",
     "models/fuzi-mingcha-v1_0",
     "models/qwen2.5-1.5b-instruct",
     "models/qwen2.5-0.5b-instruct",
@@ -63,10 +68,18 @@ EMBED_MODEL_CANDIDATES = [
 ]
 
 # 草稿（门控）模型候选：**只用来取前 k 个 token 的 logprob 分布**，不生成答案。
-# 为什么回答模型换成 API 之后本地还需要一个小模型：见 docs/deviations.md D30——
-# 门控信号 u 是"模型自己有多不确定"，需要 token 级分布；API 只在**思考模式**下
-# 返回真实分布（关思考时返回退化分布，全是 0.0 / -9999），所以保留一条本地兜底。
+# 现行默认与回答模型同一个：**models/Qwen3-4B**（D38）。要素辨别：
+#   * 回答模型走**本地**时，这份候选其实用不上——draft_source 见到"回答模型不是
+#     API"就会把草稿直接接到回答模型本身（answer_model 来源，手册 S3.5 原设计，
+#     共享模型与前缀、prefill 不翻倍）。base.yaml 里显式写 draft_model 只是为了
+#     让 /health、图注、页脚如实显示草稿是谁。
+#   * 只有回答模型切成 **API**（llm_backend: deepseek）时，才会按这份候选挑一个
+#     独立的本地草稿模型；历史上是 HF 缓存里的 Qwen2.5-0.5B（D30），现在首选 4B。
+# 为什么 API 草稿不能当默认：见 docs/deviations.md D30——门控信号 u 要的是 token 级
+# 分布，API 只在**思考模式**下返回真实分布（关思考时全是 0.0 / -9999 退化占位），
+# 而思考模式的分布实测塌缩到 ≈0、没有区分度，所以必须保留一条本地兜底。
 DRAFT_MODEL_CANDIDATES = [
+    "models/Qwen3-4B",
     "models/qwen2.5-0.5b-instruct",
     "models/qwen2.5-1.5b-instruct",
 ]
@@ -191,6 +204,15 @@ class Settings:
     deepseek_timeout: float = 120.0
     deepseek_max_retries: int = 3
 
+    # **本机权重**的思考模式（D38）：False（默认，关思考）| True。
+    # 为什么必须显式关：Qwen3 系列 chat template 的写法是
+    #   {%- if enable_thinking is defined and enable_thinking is false %}<think></think>
+    # 即**不传 enable_thinking 就等于开启思考**——模型会先写一大段 reasoning，
+    # max_new_tokens=192 很可能被它吃光，正文变空。与 D30 在 DeepSeek API 上
+    # 踩到的是同一款陷阱（那边靠 thinking=False 解决），故这里同样默认关。
+    # 环境变量：LAWGATE_LOCAL_THINKING=1 可打开（仅当模型模板支持该开关时才生效）。
+    local_thinking: bool = False
+
     # 门控草稿来源（u 的信号从哪来）：local | api | none | auto
     #   local ：本机小模型（draft_model）取 logprobs（默认；实测 u 有区分度）
     #   api   ：用回答模型自己的 logprobs（仅思考模式返回真实分布；实测 u 塌缩到 ≈0）
@@ -238,7 +260,8 @@ class Settings:
         self.deepseek_api_key = os.environ.get("DEEPSEEK_API_KEY") or self.deepseek_api_key
         for env_key, attr, cast in (("LAWGATE_LLM_THINKING", "deepseek_thinking", _as_bool),
                                     ("LAWGATE_LLM_TIMEOUT", "deepseek_timeout", float),
-                                    ("LAWGATE_LLM_RETRIES", "deepseek_max_retries", int)):
+                                    ("LAWGATE_LLM_RETRIES", "deepseek_max_retries", int),
+                                    ("LAWGATE_LOCAL_THINKING", "local_thinking", _as_bool)):
             raw = os.environ.get(env_key)
             if raw not in (None, ""):
                 try:
@@ -339,8 +362,12 @@ class Settings:
                              if self.llm_provider == "deepseek" else None),
             "llm_api_model": (self.deepseek_model
                               if self.llm_provider == "deepseek" else None),
+            # 思考模式：按**当前生效的后端**报告（D38）。
+            #   走 API → deepseek_thinking；走本机权重 → local_thinking（默认 False，
+            #   因为 Qwen3 模板不传 enable_thinking 就等于开思考，会把 192 token 吃光）。
             "llm_thinking": (self.deepseek_thinking
-                             if self.llm_provider == "deepseek" else None),
+                             if self.llm_provider == "deepseek"
+                             else bool(self.local_thinking)),
             "has_api_key": bool(self.deepseek_api_key),
             "draft_source": self.draft_source,          # auto | api | local | none
             "draft_model": self.model_label("draft"),

@@ -178,10 +178,17 @@ class ChannelB:
                 ans += (f"\n\n【文书信息】{v.real_case['court_name']}｜"
                         f"案由：{v.real_case['cause_action']}｜"
                         f"裁判日期：{v.real_case['judgment_date']}")
-                if v.real_case.get("data_source") == "SYNTHETIC":
+                ds = v.real_case.get("data_source")
+                if ds == "SYNTHETIC":
                     ans += ("\n\n⚠️【数据溯源】本案号来自**合成案号库**"
                             "（data_source=SYNTHETIC），用于系统联调，"
                             "不对应真实案件，不得作为真实引用依据。")
+                else:
+                    src_url = v.real_case.get("source_url")
+                    ans += ("\n\n📌【数据溯源】本案号来自**真实裁判文书库**"
+                            f"（data_source={ds}）"
+                            + (f"，来源：{src_url}" if src_url else "")
+                            + "。引用请以上述案号在中国裁判文书网核验为准。")
             return {"answer": ans, "trace": trace,
                     "must_show_warning": not v.passed}
 

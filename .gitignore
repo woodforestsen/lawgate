@@ -1,61 +1,41 @@
-# ---- 凭据：绝不提交 ----
+# ===== LawGate .gitignore =====
+
+# 模型权重（本地推理用，体积巨大，不入库）
+models/
+
+# 数据库与备份（可重建，不入库）
+*.db
+*.bak*
+
+# 密钥 / 环境配置（含 DeepSeek 等 API key，严禁入库）
 .env
 .env.*
-!.env.example
-*.key
-*.pem
-secrets.*
 
-# ---- 模型权重（体积大，由 scripts/fetch_hf_files.py 重新拉取）----
-models/
-*.safetensors
-*.bin
-*.gguf
+# 临时调试 / 诊断残留（隐藏文件，非项目源码）
+.diag*
+.spot*
+.probe*
+.fix*
+.vector*
+.ingest*
+.pip*
+.sample*
+.size*
+.st*
+.clone*
+.cleanup*
+.retrieval*
 
-# ---- Python ----
+# Python 缓存
 __pycache__/
-*.py[cod]
-*.egg-info/
+*.pyc
 .venv/
-venv/
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
 
-# ---- 运行产物：缓存与中间分片可重建 ----
-data/kb/gen_cache.db
-data/kb/gen_cache.db-wal
-data/kb/gen_cache.db-shm
-data/kb/chroma/
-results/**/shards/
-results/dev_calib/
-results/pilot/
-results/timing/
-# ---- 备份与归档（本地产物，不入库）----
-results/_prescore_backup/
-results/_archive/
-docs/_archive/
-docs/_*.log
-docs/_*.txt
-docs/_*.err
-docs/pipeline.log
-
-# ---- 工具内部目录（WorkBuddy 工作区、删除备份、个人记忆，不入库）----
+# 工作区元数据 / 缓存（本地工具数据，不入库）
 .workbuddy/
 
-# ---- 一次性诊断脚本 / 临时目录（不入库，避免污染仓库）----
-push_via_api.py
-verify_manifest.py
-_probe_fuzi.py
-docs/_tmp_diff/
+# 向量库（可重建，大二进制）
+data/kb/chroma/
 
-# ---- 临时/演示产物（避免与真实结果混淆）----
-results/_demo/
-figures/_demo/
-data/_tmp_*/
-
-# ---- 保留：评测集与结论性结果必须入库 ----
-!data/benchmark/*.jsonl
-!results/*/summary.csv
-!results/*/*.json
-!figures/**/*.png
+# 临时检查 / 诊断文件（下划线前缀，非项目源码）
+_*.txt

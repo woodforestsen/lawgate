@@ -1,0 +1,13 @@
+{
+  "date": "2026-09-14",
+  "backend": "numpy",
+  "embed_backend": "bge-small-zh-v1.5",
+  "embed_dim": 512,
+  "n_docs": 41751,
+  "n_provisions": 16046,
+  "n_judgment_chunks": 25705,
+  "n_judgments": 1610,
+  "col_path": "data/kb/chroma",
+  "seconds": 964.0,
+  "hardware": "CPU AMD64 / 18 cores / no CUDA"
+}

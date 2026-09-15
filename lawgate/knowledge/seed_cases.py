@@ -1,20 +1,22 @@
 # -*- coding: utf-8 -*-
-"""裁判文书 / 案号真值库的**合成**种子数据（手册 S1.3 的降级路径）。
+"""裁判文书 / 案号真值库的**兜底合成**种子数据（仅当知识库为空时使用）。
 
-== 必须披露的偏差 ==
-手册 S1.3 要求从中国裁判文书网按 4 类案由抓取 2000 篇真实文书。本项目执行环境
-无法访问裁判文书网（网络存在中间层劫持：raw.githubusercontent.com 解析到非公网
-IP，flk.npc.gov.cn 页面被注入隐藏链接）。因此：
+== 状态 ==
+- G2（docs/DATA_GAP.md）已执行：生产库 `data/kb/legal_facts.db` 的 case_registry /
+  judgments 现由 `scripts/import_judgments.py` 导入的真实裁判文书（ModelScope
+  `qazwsxplkj/cn-judgment-docs`，data_source='CJWS'）填充，约 1610 条，全部带真实案号、
+  法院、日期、原文与来源链接。
+- 本模块的 `generate_cases` / `render_full_text` **仅在知识库为空时才被
+  `build_sqlite.build_registry` 调用**，用于离线联调；`build_registry(keep_real=True)`
+  会跳过已存在真实数据的重建。
 
-  * case_registry 中的案号 **全部为合成数据**（data_source='SYNTHETIC'），
-    遵循真实案号的**格式规则**（年份-法院代字-类型代字-序号），但不对应真实案件；
-  * judgments 中的"文书"为**程序化生成的案情摘要**，不含真实裁判说理；
-  * 因此 E6 的结论只能表述为"核验器在**格式合法/不存在/案由不符/格式非法**
-    四类输入上的判别能力"，**不能**表述为对真实裁判文书库的覆盖能力。
-
-正式申报前必须执行：
-    python scripts/import_judgments.py --src <真实文书目录>
-在干净网络环境下导入真实文书与案号，并把 data_source 提升为 'CJWS'。
+== 历史披露（本模块若被使用，须如实声明）==
+手册 S1.3 要求从中国裁判文书网按 4 类案由抓取 2000 篇真实文书。本环境无法访问文书网时：
+  * 生成的案号 **全部为合成数据**（data_source='SYNTHETIC'），遵循真实案号格式规则，
+    但不对应真实案件；
+  * 文书为**程序化生成的案情摘要**，不含真实裁判说理；
+  * 此时 E6 结论只能表述为"核验器在格式合法/不存在/案由不符/格式非法四类输入上的
+    判别能力"，**不能**表述为对真实裁判文书库的覆盖能力。
 """
 from __future__ import annotations
 

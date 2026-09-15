@@ -1,0 +1,72 @@
+﻿鍥炵瓟妯″瀷   : models/Qwen3-4B
+鑽夌妯″瀷   : models/Qwen3-4B
+绮惧害/璁惧  : float16 / cpu
+鐢熸垚涓婇檺   : 48 token锛堟湰娆″疄楠屽€硷級
+鍔犺浇鍓嶅唴瀛?: 鍙敤 16.4 GB / 鎬?31.6 GB
+python.exe : 
+所在位置 D:\桌面\lawgate\scripts\_watch_verify.ps1:46 字符: 1
++ & $py $check1 *> $log1
++ ~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Loading weights:   0%|          | 0/398 [00:00<?, ?it/s]
+Loading weights:   0%|          | 1/398 [00:00<04:44,  1.39it/s]
+Loading weights:  28%|鈻堚枅鈻?      | 113/398 [00:00<00:01, 180.55it/s]
+Loading weights:  42%|鈻堚枅鈻堚枅鈻?    | 168/398 [00:01<00:01, 143.16it/s]
+Loading weights:  51%|鈻堚枅鈻堚枅鈻?    | 203/398 [00:01<00:01, 137.30it/s]
+Loading weights:  58%|鈻堚枅鈻堚枅鈻堚枈    | 229/398 [00:01<00:01, 145.26it/s]
+Loading weights:  64%|鈻堚枅鈻堚枅鈻堚枅鈻?  | 253/398 [00:01<00:00, 153.48it/s]
+Loading weights:  69%|鈻堚枅鈻堚枅鈻堚枅鈻?  | 275/398 [00:02<00:00, 153.92it/s]
+Loading weights:  74%|鈻堚枅鈻堚枅鈻堚枅鈻堚枍  | 295/398 [00:02<00:00, 162.37it/s]
+Loading weights:  80%|鈻堚枅鈻堚枅鈻堚枅鈻堚枅  | 319/398 [00:02<00:00, 172.16it/s]
+Loading weights:  85%|鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻?| 339/398 [00:02<00:00, 164.69it/s]
+Loading weights:  91%|鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻?| 361/398 [00:02<00:00, 175.97it/s]
+Loading weights:  96%|鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枌| 381/398 [00:02<00:00, 168.35it/s]
+Loading weights: 100%|鈻堚枅鈻堚枅鈻堚枅鈻堚枅鈻堚枅| 398/398 [00:02<00:00, 147.72it/s]
+
+鍔犺浇鑰楁椂   : 35.3 s
+鍚庣鑷堪   : {'llm_backend': 'hf', 'llm_name': 'Qwen3-4B', 'llm_dtype': 'float16', 'llm_backend_impl': 'hf', 'llm_thinking': False, 'llm_thinking_supported': True}
+鍔犺浇鍚庡唴瀛?: 鍙敤 9.3 GB锛堝崰 7.1 GB锛?
+
+== 1. 鍚庣纭疄鏄湰鏈?Qwen3-4B ==
+  [PASS] 鍥炵瓟妯″瀷鏄?Qwen3-4B锛堜笉鏄?fuzi / 0.5B 蹇収锛? llm_name=Qwen3-4B
+  [PASS] 瑙勬ā纭疄鏄?4B 妗? llm_name=Qwen3-4B
+  [PASS] 璧?HF锛坱ransformers锛夊悗绔? llm_backend=hf
+  [PASS] 绮惧害涓?float16锛圕PU 鍐呭瓨鍙锛宖p32 浼氱炕鍊嶅埌 ~16 GB锛? llm_dtype=float16
+  [PASS] 鎬濊€冩ā寮忓凡鏄惧紡鍏抽棴锛堝惁鍒?192 token 浼氳 <think> 鎺ㄧ悊鍚冨厜锛? llm_thinking=False 妯℃澘鏀寔=True
+  [PASS] 鍔犺浇鍗犵敤 < 13 GB锛堟湭钀芥垚 fp32锛? 7.1 GB
+
+== 2. 闂ㄦ帶鑽夌澶嶇敤鍥炵瓟妯″瀷鏈韩锛圖38 鏍稿績鏈哄埗锛?=
+  鎻愰棶锛氫粈涔堟槸绂诲鍐烽潤鏈燂紵
+  閫氶亾=A 妗?b1 寤惰繜=68.5s
+  鑽夌婧?answer_model 鑰楁椂=18.416
+  鍥炵瓟锛氱濠氬喎闈欐湡鏄寚鏍规嵁銆婁腑鍗庝汉姘戝叡鍜屽浗姘戞硶鍏搞€嬬殑瑙勫畾锛屽か濡诲弻鏂硅嚜鎰跨濠氱殑锛屽簲褰撶璁功闈㈢濠氬崗璁紝骞朵翰鑷埌濠氬Щ鐧昏鏈哄叧鐢宠绂诲鐧昏銆傝嚜濠氬Щ鐧昏鏈哄叧鏀跺埌绂诲鐢宠涔嬫棩璧凤紝鍙屾柟搴斿綋鍦?
+  [PASS] 鑽夌婧?= answer_model锛堝鐢ㄥ洖绛旀ā鍨嬶紝鏈澶栧姞杞界浜屼唤鏉冮噸锛? draft_source=answer_model
+
+== 3. 闈炴祦寮忓洖绛旓紙/chat 鍙ｅ緞锛?=
+  [PASS] 闈炴祦寮忓洖绛旈潪绌? 86 瀛?
+  [PASS] 鍥炵瓟鍚腑鏂囷紙缂栫爜姝ｇ‘锛?
+  [PASS] trace 璁板綍浜嗗悗绔? hf
+
+== 4. 鍚岄棶鍐嶉棶涓€娆★紙缂撳瓨鍛戒腑搴旂鍥炰笖鏂囨湰涓€鑷达級==
+  绗簩杞欢杩?0.0s锛堥杞?68.5s锛?
+  [PASS] 涓よ疆鏂囨湰瀹屽叏涓€鑷达紙鍚岄敭鍚屽弬锛?
+  [PASS] 绗簩杞槑鏄炬洿蹇紙缂撳瓨鐢熸晥锛? 0.0s vs 68.5s
+
+== 5. 娴佸紡锛?chat/stream 涓?UI 鍙ｅ緞锛?=
+  棣栧瓧寤惰繜锛?4.2s
+  浜嬩欢椤哄簭锛歔'generate'] 鈫?delta脳39 鈫?done锛屾€昏€楁椂 95.3s
+  娴佸紡鍥炵瓟锛氱濠氬喎闈欐湡鏄寚澶鍙屾柟鎻愬嚭绂诲鐢宠鍚庯紝蹇呴』缁忚繃30澶╃殑鍐烽潤鏈燂紝鍐嶇敵璇风濠氱櫥璁般€傚喎闈欐湡鏈熼棿锛屽弻鏂逛笉寰楅鍙栫濠氳瘉銆傘€婁腑鍗庝汉姘戝叡鍜屽浗姘戞硶鍏搞€嬬涓€鍗冮浂涓冨崄涓冩潯鏄庣‘瑙勫畾
+  [PASS] 鏈?stage 浜嬩欢  ['generate']
+  [PASS] 鏈?delta 澧為噺  39 鐗?
+  [PASS] done.answer 闈炵┖
+  [PASS] delta 鎷兼帴 == done.answer锛堟潈濞佸叏鏂囦竴鑷达級
+  [PASS] 娴佸紡鍥炵瓟鍚腑鏂?
+  鍙傝€冨悶鍚愶細绾?0.41 token/s锛堟寜瀹為檯 39 鐗囦及绠楋級
+  鎹㈢畻 192 token 绾﹂渶 469 s/鏍?
+
+======================================================================
+缁撴灉锛?7/17 閫氳繃
+
+鎶ュ憡 鈫?docs/check_qwen3_4b.txt
