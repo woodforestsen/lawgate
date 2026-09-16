@@ -5,9 +5,9 @@
 > 原因、以及该不一致对结论的影响**。论文、申报书与答辩材料中凡涉及这些点，均应
 > 引用本文件，不得只报"符合手册"。
 
-编号规则：`D0` 为环境级前提，`D1` 起为实现级/方法学偏差（**编号已至 `D37`**，
-其中 D19/D24/D29/D30/D33 为口径级变更，D36 为收尾的文档/产物治理，D37 为按用户要求删除 smoke
-脚本与产物（纯工具/文档治理），新旧口径数字禁止并排）。每条给出：
+编号规则：`D0` 为环境级前提，`D1` 起为实现级/方法学偏差（**编号已至 `D41`**，
+其中 D19/D24/D29/D30/D33/D38/D39 为口径级变更，D36/D37/D41 为文档/产物治理（D41 = 2026-09-16
+按用户要求清空全部脚本与实验产物，实验结论转历史留档），新旧口径数字禁止并排）。每条给出：
 **手册要求 → 实际情况 → 处置 → 影响与残余风险**。
 
 ---
@@ -1721,6 +1721,31 @@ S3「20/20」、流式「169 片/922 ms」、S0.4「12.36 tok/s」等结论仍�
 
 ---
 
+## D41
+
+**标题**：按用户要求清空全部脚本与实验产物（复跑前治理，2026-09-16）
+
+**背景**：D39 落地后，历史实验产物（0.5B/1.5B/API 多口径混杂）已全部失去对现行 Qwen3-4B 配置的表征意义。用户 2026-09-16 要求清空，为新口径重跑做准备（D37 只删了 smoke 脚本，本次是全量）。
+
+**删除内容**（git 未提交删除 563 个文件，历史可经 git 完整恢复）：
+- `scripts/` **全目录**（37 个 .py）：含 `quickcheck.py`、`calibrate.py`、`run_exp.py`、`run_pipeline.py`、`e0_diagnostic.py`、`e2_ablation.py`、`e3_multiturn.py`、`e5_temporal.py`、`e6_case_verify.py`、`intent_accept.py`、`rescore_results.py`、`import_law_text.py`、`import_judgments.py`、`build_benchmark.py`、`make_demo_video.py`、全部 `check_*.py`、`serve_one.py` 等——**回归/实验/导入/服务启动工具全部移除**；
+- `results/`（496 个文件）：E1–E6 全部结果、校准报告、`intent_acceptance.json`、`_prescore_backup/` 等；
+- `figures/`（12 个文件）：含 D39 校准所依赖的 `figures/e0_qwen3/e0_signals_dev.jsonl`；
+- `video/lawgate_demo.mp4`（58 s 演示片）；
+- `docs/` 下 12 个文档（`intent_acceptance.md`、`model_card.md`、`annotation_guide.md`、大创四件套、`代码审计报告_2026-09-13.md`、`小白复现指南.md` 等）与 5 个归档日志。
+
+**保留内容**：`lawgate/` 包（44 个 .py，含 api/channel/gate/knowledge/eval 全部实现）、`configs/`（base.yaml + D39 阈值）、`data/` 全量（kb 真实语料库、2026-09-14 重建的 benchmark、lawbench、raw、external、judgments）、`models/Qwen3-4B` + `models/bge-small-zh-v1.5`（`models/fuzi-mingcha-v1_0` 兜底模型亦被删除）、`docs/` 7 份核心文档（ACCEPTANCE/DATA_GAP/deviations/risk_register/system_manual/pipeline_steps/功能流程图）、README 与三个启动脚本。
+
+**连带影响（必须披露）**：
+1. **服务启动链断**：`启动服务.ps1` 依赖 `scripts\serve_one.py`（第 162 行），脚本已删 → 演示服务暂不可启动，需先从 git 恢复 `scripts/serve_one.py` 或改写启动脚本直调 `lawgate.api.app`；
+2. **一切实验结论转为历史留档**：E1–E6、校准、意图验收等数字（D33/D34/D39）在仓内**不可复核**，ACCEPTANCE.md 相应条目已改标 ⚰️/⏳；
+3. D39 的 τ_b 校准所依据的信号文件已删，阈值本身仍写留在 `configs/thresholds.json`（b1 0.0 / b2 0.0002 / b3 0.0 / b4 0.0），重跑 E0 前无法重新推导；
+4. `models/fuzi-mingcha-v1_0` 删除 → D29 降级兜底链不复存在，现行只剩 Qwen3-4B（本地）与 deepseek API（需密钥）两条路。
+
+**影响：否（纯产物/工具治理）** —— 不改任何代码逻辑、配置与数据；但**可复跑性降为零**，重跑实验前必须先恢复或重写脚本层。
+
+---
+
 ## 偏差影响汇总
 
 | 编号 | 一句话 | 是否影响核心结论 |
@@ -1759,3 +1784,4 @@ S3「20/20」、流式「169 片/922 ms」、S0.4「12.36 tok/s」等结论仍�
 | D37 | **按用户要求删除全部 smoke 脚本与产物**（`scripts/smoke.py`、`scripts/smoke_stream.py`、`scripts/smoke_s0.py` 与 docs 下 7 个 smoke 产物，2026-09-16）：S3 三通道冒烟 20/20（D26）、流式真机冒烟（D28/D30）、S0.4 吞吐指纹（12.36 tok/s）均为**历史证据**，结论与缺陷记录原文保留在 D26/D28/D30 与本报告；现行可复跑回归改走 `scripts/quickcheck.py` + `scripts/check_stream.py` + `scripts/check_deepseek.py`（`--live`）+ `scripts/check_fuzi_e2e.py` | **否**（纯工具/产物治理：不改任何代码逻辑、配置、结果文件与既成数字；删除的是验收/回归工具，历史结论仍可追溯） |
 | D38 | **回答+草稿模型全换成魔搭 Qwen3-4B**（用户 2026-09-13 要求；真机验证 2026-09-14）：causal/draft 都钉 `models/Qwen3-4B`、`llm_backend: hf`、`dtype: float16`、`local_thinking: false`（修 Qwen3 "不传 enable_thinking=开思考" 陷阱）。`check_qwen3_e2e.py` **17/17 PASS**（加载 7.1 GB float16、思考关、草稿源=answer_model、缓存/流式一致）。**但 `check_draft_u.py` 暴露门控信号塌缩**：u(margin) 六题全在 0.0000–0.0005（极差 0.0005），比 D30 的 0.5B 草稿（0.0161/0.0263/0.3632/0.0790）小 2–3 个数量级；现行 τ_b={0.29/1.0/1.0/1.0} 与 TARG τ=0.10 全部失效，**门控对所有查询都判"不检索"（通道 A），律核检索通道（B）实际永不触发** | **是**（重大：门控失效——不修则核心指标"检索降 91%"在 Qwen3-4B 口径下不成立；τ_b 必须重校准到 ≈0.0003 量级，或恢复小草稿作门控源；重校准/决策前 E1/E2 不可引用 Qwen3-4B 口径） |
 | D39 | **Qwen3-4B 口径门控阈值重校准落地（route A，2026-09-14）**：e0_qwen3 全量 236 条 dev + need_retrieval 金标逐桶 Youden 校准。margin AUC=0.8964（绿灯，推翻 D38"门控失活"外推）。写回 `configs/thresholds.json`：hybrid 默认 τ_b={b1:0.0,b2:0.0002,b3:0.0,b4:0.0} → dev RR=0.8178（**检索降 18.2%**，b1/b4 复杂度门控退化为恒检索）；signal 模式（全桶 margin）τ_b={b1:0.0001,b2:0.0002,b3:0.0,b4:0.0002} → dev RR=0.5424（**检索降 45.8%**）。旧"检索降 91%"为 0.5B 历史口径、对 Qwen3-4B 不成立 | **是**（重大：核心指标数字须随草稿口径改写；"91%"不得再作为 Qwen3-4B 口径结论，须标 0.5B 历史口径并改 18.2%/45.8%；且本校准为信号判别力口径、非端到端 correct，标签构造+case 合成，阈值 ~1e-4 脆弱） |
+| D41 | **按用户要求清空全部脚本与实验产物（2026-09-16）**：`scripts/` 全目录（37 个 .py）、`results/`（496 个文件）、`figures/`（12 个）、`video/lawgate_demo.mp4`、docs 下 12 个文档与 5 个归档日志删除（git 可恢复）；`models/fuzi-mingcha-v1_0` 兜底模型一并删除。保留 lawgate/ 包、configs/、data/ 全量、Qwen3-4B + bge-small、docs 7 份核心文档。连带：服务启动链断（`启动服务.ps1`→`scripts/serve_one.py`）；一切实验结论转历史留档、仓内不可复核 | **否**（纯产物/工具治理：不改代码/配置/数据；但可复跑性降为零，重跑前须先恢复或重写脚本层） |
