@@ -39,3 +39,6 @@ data/kb/chroma/
 
 # 临时检查 / 诊断文件（下划线前缀，非项目源码）
 _*.txt
+# 外部数据克隆仓库(脚本可重拉,体积过大不入库)
+data/external/LawBench/
+data/external/laws-data/

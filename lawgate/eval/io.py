@@ -15,11 +15,33 @@ from pathlib import Path
 from lawgate.config import get_settings
 
 
-def load_split(name: str, bench_dir: str | Path | None = None) -> list[dict]:
-    """按名字装载划分：dev / test / test_multiturn / temporal_trap /
-    case_no_verify / all。"""
+def _resolve_split_path(name: str, bench_dir: str | Path | None) -> Path:
+    """划分名 → 文件路径（D40：外部真实基准单独放 data/<bench>/ 下）。
+
+    两个来源：
+      * 自建基准：``bench_dir/<name>.jsonl``（默认 data/benchmark/）；
+      * 外部真实基准：``data/<前缀>/<剩余>.jsonl``——LawBench 的划分名形如
+        ``lawbench_test``，真实文件是 ``data/lawbench/test.jsonl``；
+        它们由 ``scripts/build_lawbench.py`` 生成、由
+        ``scripts/score_lawbench.py`` 按官方口径判分，**不放 data/benchmark/**
+        以免与自建基准的构建流程（build_benchmark.py 会整体重写该目录）互相踩。
+    """
     d = Path(bench_dir or get_settings().bench_dir)
     p = d / f"{name}.jsonl"
+    if p.exists() or bench_dir is not None:
+        return p
+    if name.startswith("lawbench_"):
+        alt = (Path(get_settings().data_dir) / "lawbench"
+               / f"{name[len('lawbench_'):]}.jsonl")
+        if alt.exists():
+            return alt
+    return p
+
+
+def load_split(name: str, bench_dir: str | Path | None = None) -> list[dict]:
+    """按名字装载划分：dev / test / test_multiturn / temporal_trap /
+    case_no_verify / all / lawbench_test（外部真实基准，见 _resolve_split_path）。"""
+    p = _resolve_split_path(name, bench_dir)
     if not p.exists():
         raise FileNotFoundError(f"找不到划分文件 {p}；请先运行 scripts/build_benchmark.py")
     out = []

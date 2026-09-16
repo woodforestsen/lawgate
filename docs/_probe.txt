@@ -1,8 +1,0 @@
-model-00001-of-00003.safetensors = 3774.5 MB
-model-00002-of-00003.safetensors.part = 168.5 MB
-model-00003-of-00003.safetensors = 95 MB
-model.safetensors.index.json = 0 MB
-      ... 160MB  (2.4 MB/s)
-      ... 180MB  (2.5 MB/s)
-      ... 200MB  (2.6 MB/s)
-
