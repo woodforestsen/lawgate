@@ -3,13 +3,18 @@
 
 路由顺序：
   1. 意图命中且槽位齐 → 通道 B（0 次检索；查无则降级）
-  2. 否则草稿 k 个 token → 信号 u → 桶 b → τ_b
+  2. 否则分桶 b → 确定性复杂度评分 u → τ_b
   3. u > τ_b → 通道 C（1 次检索）；否则通道 A（0 次检索）
+
+默认门控信号是**确定性复杂度评分**（E2-A3 实测：全桶复杂度门控与混合门控
+在 test_e1 300 条上 acc/RR 逐位一致，signals 不带来增益），因此**默认不取
+草稿、不跑神经信号**——草稿是最贵的门控步骤（本机 Qwen3-4B 每条 18-35s）。
+只有显式设 ``router_mode="hybrid"/"signal"`` 时才对需要的桶取草稿。
 
 消融开关（E2）全部集中在 ``RouterOptions``，避免在多处复制路由代码：
   A1 disable_channel_b  关闭通道 B（法条/案号题全部走门控）
   A2 single_tau         用单全局阈值替代桶级阈值
-  A3 signal             切换信号（margin / entropy / variance / neglogp）
+  A3 signal / router_mode  切换信号与门控来源（margin / entropy / …）
   A4 k_draft            草稿长度
 """
 from __future__ import annotations
@@ -39,12 +44,12 @@ class RouterOptions:
     single_tau: bool = False
     tau_single: float = 0.10
     tau_scale: float = 1.0
-    # 门控模式（E0 实测结论见 gate/complexity.py 模块注释）
-    #   hybrid     : b2 用神经信号，b1/b3/b4 用确定性复杂度评分（默认）
-    #   signal     : 全部桶用神经信号（E0 红灯，作为消融对照）
-    #   complexity : 全部桶用确定性复杂度评分（手册风险表的降级方案）
-    router_mode: str = "hybrid"
-    signal_buckets: tuple = ("b2",)
+    # 门控模式（E2-A3 后默认 complexity；E0 分桶结论见 gate/complexity.py 模块注释）
+    #   complexity : 全部桶用确定性复杂度评分（默认：与混合门控同精度、零草稿开销）
+    #   hybrid     : signal_buckets 里的桶用神经信号，其余用复杂度评分（取草稿）
+    #   signal     : 全部桶用神经信号（E0 红灯，仅作消融对照）
+    router_mode: str = "complexity"
+    signal_buckets: tuple = ()
 
     def to_dict(self) -> dict:
         return asdict(self)
@@ -175,9 +180,6 @@ class LegalGateRouter:
                     return
 
         # ---------------------------------------------------------- 门控
-        stats = self.draft.draft_logprobs(query, history, k=self.opt.k_draft)
-        u_signal = float(SIGNALS[self.opt.signal](stats))
-
         bucket = bucket_hint if bucket_hint in BUCKETS else classify_bucket({
             "category": "case" if intent.hit_case_no else (
                 "provision" if intent.slots.article_no else "concept"),
@@ -189,6 +191,16 @@ class LegalGateRouter:
         cplx = complexity_score(query, intent.slots, history,
                                 category=meta.get("category"))
         u_cplx = cplx.score
+
+        # 草稿（神经信号）是最贵的门控步骤，只在模式真的要用它时才取：
+        # complexity 模式永不取草稿；hybrid 只对 signal_buckets 里的桶取。
+        needs_signal = (self.opt.router_mode == "signal"
+                        or (self.opt.router_mode == "hybrid"
+                            and bucket in tuple(self.opt.signal_buckets)))
+        stats = None
+        if needs_signal:
+            stats = self.draft.draft_logprobs(query, history, k=self.opt.k_draft)
+        u_signal = float(SIGNALS[self.opt.signal](stats)) if stats is not None else None
 
         if self.opt.router_mode == "signal":
             u, gate_source = u_signal, "neural_signal"
@@ -218,7 +230,8 @@ class LegalGateRouter:
             channel, n_calls = "A", 0
 
         yield {"event": "stage", "stage": "generate", "channel": channel,
-               "bucket": bucket, "u": round(u, 6), "u_signal": round(u_signal, 6),
+               "bucket": bucket, "u": round(u, 6),
+               **({"u_signal": round(u_signal, 6)} if u_signal is not None else {}),
                "u_complexity": round(u_cplx, 6), "tau_b": tau_b,
                "gate_source": gate_source,
                "decision": (f"[{gate_source}] u={u:.4f} "
@@ -242,7 +255,7 @@ class LegalGateRouter:
         trace = {
             "channel": channel,
             "u": round(u, 6),
-            "u_signal": round(u_signal, 6),
+            "u_signal": round(u_signal, 6) if u_signal is not None else None,
             "u_complexity": round(u_cplx, 6),
             "gate_source": gate_source,
             "router_mode": self.opt.router_mode,
@@ -265,10 +278,13 @@ class LegalGateRouter:
             "llm_backend": self.llm.describe().get("llm_backend"),
             # 门控草稿是谁给的（api / local / rule）+ 换源过程（D30）：
             # 没有这两项，事后无法判断"这条 u 是不是换了模型之后口径变了"。
-            "draft_source": getattr(stats, "source", "") or "answer_model",
-            "draft_attempts": list(getattr(stats, "attempts", []) or []),
-            "draft_seconds": round(float(getattr(stats, "seconds", 0.0) or 0.0), 3),
-            "draft_text": stats.text[:200],
+            # complexity 模式不取草稿：写明跳过原因，避免被当成漏记。
+            "draft_source": (getattr(stats, "source", "") or "answer_model")
+                            if stats is not None else "skipped（complexity 门控无需草稿）",
+            "draft_attempts": list(getattr(stats, "attempts", []) or []) if stats is not None else [],
+            "draft_seconds": round(float(getattr(stats, "seconds", 0.0) or 0.0), 3)
+                             if stats is not None else 0.0,
+            "draft_text": stats.text[:200] if stats is not None else "",
         }
         yield {"event": "done", "answer": answer, "trace": trace}
 
