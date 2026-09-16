@@ -465,11 +465,11 @@ flowchart TD
 
     SIG --> MODE
     CPLX --> MODE
-    MODE{"router_mode（RouterOptions）<br/>**默认 complexity（E2-A3/D40）**"}
-    MODE -- "hybrid 且 bucket ∈ signal_buckets" --> USIG["u = u_signal<br/>gate_source = neural_signal<br/>（此路径才取草稿）"]
-    MODE -- "hybrid 且 bucket ∉ signal_buckets" --> UCPLX["u = u_complexity<br/>gate_source = complexity"]
+    MODE{"router_mode（RouterOptions）<br/>**默认 hybrid**"}
+    MODE -- "hybrid 且 bucket ∈ signal_buckets=('b2',)" --> USIG["u = u_signal<br/>gate_source = neural_signal"]
+    MODE -- "hybrid 且 bucket ∈ {b1,b3,b4}" --> UCPLX["u = u_complexity<br/>gate_source = complexity"]
     MODE -- "signal（消融 A3）" --> UALL["全部桶 u = u_signal"]
-    MODE -- "complexity（**默认**）" --> UALL2["全部桶 u = u_complexity<br/>（零草稿开销）"]
+    MODE -- "complexity（降级/消融 A3）" --> UALL2["全部桶 u = u_complexity"]
 
     USIG --> TAU
     UCPLX --> TAU
@@ -496,14 +496,12 @@ flowchart TD
 
 | 模式 | 含义 | 用途 |
 |---|---|---|
-| `complexity`（**默认**） | 全部桶用确定性复杂度评分 | E2-A3 实测与混合门控 acc/RR 逐位一致（`results/e2/ablation_rows.json`），且**免去草稿开销**（本机 Qwen3-4B 草稿 18-35s/条，远超检索本身成本）；见 D40 |
-| `hybrid` | signal_buckets 里的桶用神经信号，其余用复杂度评分 | D39 的 Qwen3 口径校准显示信号模式 dev RR 更低（0.5424 vs 0.8178），但代价是每条先花 18-35s 取草稿；需要更低检索率时显式开启 |
+| `hybrid`（**默认**） | b2 用法条查询的神经信号，b1/b3/b4 用确定性复杂度评分 | 依据 E0 的分桶结论（见 §4、`docs/deviations.md` D18） |
 | `signal` | 全部桶用神经不确定性信号 | 消融对照（E0 汇总红灯，作为一个"不该这么做"的对照臂） |
+| `complexity` | 全部桶用确定性复杂度评分 | 手册风险表的降级方案 / 消融对照 |
 
 > 关键点：**不论用哪种门控信号，τ_b 始终逐桶在 dev 上校准**。手册的核心贡献
-> （桶级阈值校准 + 三通道异构）完整保留。E2-A3 的结论是"复杂度评分就能打平"，
-> 因此默认走零开销的 complexity 门控；神经信号路径保留为可选（`router_mode`），
-> 且只有实际用到它的桶才会取草稿（惰性草稿，D40）。
+> （桶级阈值校准 + 三通道异构）完整保留，只是"闸门信号按桶取用"。
 
 ---
 
